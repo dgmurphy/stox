@@ -1,4 +1,3 @@
-# stox_v0.py
 import pandas as pd 
 import numpy as np
 import os.path
@@ -7,6 +6,7 @@ from datetime import datetime, timedelta
 from lib.ntlogging import logging
 
 summary_input_file = "../data/dataset_summary.csv"
+symbols_output_file = "../data/symbols.csv"
 
 if not os.path.exists(summary_input_file):
     logging.critical("Location file not found: " +
@@ -24,9 +24,13 @@ except Exception as e:
     sys.exit()
     
 # Keep stocks with from date on or before 1/1/2009
-#df[(df['date']>datetime.date(2016,1,1)) & (df['date']<datetime.date(2016,3,1))]  
 stox_df = stox_df[(stox_df['stock_from_date']<=pd.Timestamp(2009,1,1)) &
                    (stox_df['stock_to_date']>=pd.Timestamp(2019,1,1))]
-print(str(stox_df.shape))
+
+stox_df = stox_df['symbol']
+logging.info("Writing " + symbols_output_file)
+stox_df.to_csv(symbols_output_file, index=False)                 
+logging.info("Symbols shape " + str(stox_df.shape))
 print(stox_df.head(100))
+logging.info("Done.")
 
