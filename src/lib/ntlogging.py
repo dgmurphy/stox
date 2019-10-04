@@ -9,7 +9,7 @@ logging.basicConfig(
     format='%(levelname)s: %(message)s',
     datefmt='%m/%d/%Y %I:%M:%S %p',
     handlers=[
-        RotatingFileHandler("{0}/{1}.log".format(".", "log-itrend"), mode='a', 
+        RotatingFileHandler("{0}/{1}.log".format(".", "log-stox"), mode='a', 
             maxBytes=1048576),
         logging.StreamHandler()]
     )
