@@ -21,8 +21,8 @@ def load_prices(prices_file):
 
 def main():
 
-    PRICES_START_DATE = pd.Timestamp(2017,1,1)
-    PRICES_END_DATE = pd.Timestamp(2018,1,1)
+    PRICES_START_DATE = pd.Timestamp(2009,1,1)
+    PRICES_END_DATE = pd.Timestamp(2019,1,1)
 
     symbols_input_file = "../data/symbols.csv"
     prices_input_file = "../data/stock_prices_latest.csv"

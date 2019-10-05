@@ -27,6 +27,9 @@ except Exception as e:
 stox_df = stox_df[(stox_df['stock_from_date']<=pd.Timestamp(2009,1,1)) &
                    (stox_df['stock_to_date']>=pd.Timestamp(2019,1,1))]
 
+# DEBUG keep small batch of symbols
+#stox_df = stox_df[:30]
+
 stox_df = stox_df['symbol']
 logging.info("Writing " + symbols_output_file)
 stox_df.to_csv(symbols_output_file, index=False)                 

@@ -29,6 +29,7 @@ def main():
     logging.info("Processing started: " + str(proc_starttime))
 
     prices_input_file = "../data/stock_prices_filtered.csv"
+    prices_output_file = "../data/stock_prices_grouped.csv"
 
     #register_matplotlib_converters()
         
@@ -40,25 +41,55 @@ def main():
     num_groups = len(prices_df)
     logging.info("# groups: " + str(num_groups))
 
-    # pick epoch
-    epoch = pd.Timestamp(2017,1,3)
-    has_epoch = 0
-    missing_epoch = 0
+
+    #cols for the output data frame
+    cols = ['symbol', 'interval', 'days', 'd0', 'p0', 'd1', 'p1', 'deltap']
+    rowlst = [] # holder for row
+    symbol_count = 0
     for symbol_name, symbol_df in prices_df:
+
+        logging.info("Processing " + symbol_name)
         
         # group into time intervals
         symbol_df = symbol_df.groupby(Grouper(key='date', freq='W'))
+        inum = 1  # interval index
         for tspan, tspan_df in symbol_df:
-            min_date = tspan_df['date'].min()
-            max_date = tspan_df['date'].max()
-            logging.info(symbol_name + " " + str(min_date) + " " + str(max_date))
 
+            # logging.info("processing span: " + str(tspan))
+            tspan_df = tspan_df.sort_values(['date']).reindex()
 
-            
+            if len(tspan_df) > 0:
+                d0 = tspan_df.iloc[0].loc['date']
+                d1 = tspan_df.iloc[-1].loc['date']
+                delta_s = (d1 - d0).total_seconds()
+                # elapsed days is inclusive
+                delta_days = 1.0 + (delta_s / (60.0 * 60.0 * 24.0))
+                p0 = tspan_df.iloc[0].loc['close_adjusted']
+                p1 = tspan_df.iloc[-1].loc['close_adjusted']
+                deltap = p1 - p0
 
-        #logging.info(name + " # intervals: " + str(len(symbol_df)))
+                # format output
+                p0 = str(f"{p0:.4f}")
+                p1 = str(f"{p1:.4f}")
+                deltap = str(f"{deltap:.3f}")
+                delta_days = str(f"{delta_days:.3f}")
 
-    
+                rowlst.append([symbol_name, inum, delta_days, d0, p0, 
+                    d1, p1, deltap])
+
+                inum += 1
+
+        symbol_count += 1
+        percent_complete = int(symbol_count / num_groups)
+        if (percent_complete % 2) == 0:
+            logging.info("........." + str(percent_complete) + 
+                         " percent complete ")
+
+        
+        o_df = pd.DataFrame(rowlst, columns=cols) 
+
+    logging.info("Writing output csv " + prices_output_file)
+    o_df.to_csv(prices_output_file, index=False, sep="\t")
 
     proc_endtime = datetime.now()
     logging.info(("Total Processing time (min): " + 
