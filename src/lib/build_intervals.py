@@ -23,13 +23,17 @@ def load_prices(prices_file):
     return prices_df
      
 
-def main():
+def build_intervals(cfg):
 
+    # Processing timer
     proc_starttime = datetime.now()
     logging.info("Processing started: " + str(proc_starttime))
 
-    prices_input_file = "../data/stock_prices_filtered.csv"
-    prices_output_file = "../data/stock_prices_grouped.csv"
+    # PROPS
+    INTERVAL = cfg['stock_hold_time']  # Amount of time between start/end price
+    prices_input_file = cfg['data_dir'] + cfg['prices_filtered_file']
+    prices_output_file = (cfg['data_dir'] + cfg['prices_grouped_prefix'] + 
+                          INTERVAL + ".csv")
 
     #register_matplotlib_converters()
         
@@ -46,12 +50,13 @@ def main():
     cols = ['symbol', 'interval', 'days', 'd0', 'p0', 'd1', 'p1', 'deltap']
     rowlst = [] # holder for row
     symbol_count = 0
+    percent_complete = 0
     for symbol_name, symbol_df in prices_df:
 
-        logging.info("Processing " + symbol_name)
+        logging.info("Processing " + symbol_name + f" ({percent_complete:.1f})")
         
         # group into time intervals
-        symbol_df = symbol_df.groupby(Grouper(key='date', freq='W'))
+        symbol_df = symbol_df.groupby(Grouper(key='date', freq=INTERVAL))
         inum = 1  # interval index
         for tspan, tspan_df in symbol_df:
 
@@ -80,24 +85,17 @@ def main():
                 inum += 1
 
         symbol_count += 1
-        percent_complete = int(symbol_count / num_groups)
-        if (percent_complete % 2) == 0:
-            logging.info("........." + str(percent_complete) + 
-                         " percent complete ")
-
+        percent_complete = int((symbol_count / num_groups) * 100.0)
         
         o_df = pd.DataFrame(rowlst, columns=cols) 
 
     logging.info("Writing output csv " + prices_output_file)
     o_df.to_csv(prices_output_file, index=False, sep="\t")
 
+    # Processing timer
     proc_endtime = datetime.now()
     logging.info(("Total Processing time (min): " + 
         str((proc_endtime - proc_starttime).total_seconds() / 60.0)))
 
     plt.show()
 
-
-if __name__ == '__main__':
-    main()
-    print("DONE\n")

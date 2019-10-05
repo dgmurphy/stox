@@ -6,13 +6,13 @@ from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
 
-def main():
+def buy_sell(cfg):
 
-    prices_input_file = "../data/stock_prices_grouped.csv"
-    buy_sell_output_file = "../data/buy_sell.csv"
-    budget_dollars = 2000.0
-    fee_dollars = 10.0  # Fidelity charges $4.95 per trade
-
+    prices_input_file = (cfg['data_dir'] + cfg['prices_grouped_prefix'] + 
+                          cfg['stock_hold_time'] + ".csv")
+    buy_sell_output_file = cfg['data_dir'] + cfg['buy_sell_results']
+    budget_dollars = float(cfg['budget_dollars'])
+    fee_dollars = float(cfg['tx_fee'])
 
     try:
         logging.info("Reading: " + prices_input_file)
@@ -58,8 +58,3 @@ def main():
     logging.info("Writing output csv " + buy_sell_output_file)
     o_df.to_csv(buy_sell_output_file, index=False, sep=",")
 
-
-
-if __name__ == '__main__':
-    main()
-    print("DONE\n")
