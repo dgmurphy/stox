@@ -8,9 +8,9 @@ from lib.ntlogging import logging
 
 def buy_sell(cfg):
 
-    prices_input_file = (cfg['data_dir'] + cfg['prices_grouped_prefix'] + 
+    prices_input_file = (cfg['stox_data_dir'] + cfg['prices_grouped_prefix'] + 
                           cfg['stock_hold_time'] + ".csv")
-    buy_sell_output_file = cfg['data_dir'] + cfg['buy_sell_results']
+    buy_sell_output_file = cfg['stox_data_dir'] + cfg['buy_sell_results']
     budget_dollars = float(cfg['budget_dollars'])
     fee_dollars = float(cfg['tx_fee'])
 
@@ -22,9 +22,15 @@ def buy_sell(cfg):
         logging.warning("Not parsed: " + prices_input_file + "\n" + str(e))
         sys.exit()
 
+    # drop very short durations (< 4 days)
+    stox_df = stox_df[stox_df.days >= 4]
+    # print(str(stox_df.head(100)))
+    # input("OK: ")
+
     logging.info("Calculating shares & profits columns...")
     stox_df['shares'] = np.floor(budget_dollars / stox_df['p0'])
     stox_df['profit'] = stox_df['deltap'] * stox_df['shares'] - fee_dollars
+
 
     # group and calculate percentage of profitable intervals
     cols = ['symbol', 'total_intervals', 'percent_black', 'num_black', 'num_red', 'average_gain', 

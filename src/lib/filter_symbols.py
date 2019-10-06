@@ -7,8 +7,21 @@ from lib.ntlogging import logging
 
 def filter_symbols(cfg):
 
-    summary_input_file = cfg['data_dir'] + cfg['summary_input_file']
-    symbols_output_file = cfg['data_dir'] + cfg['symbols_file']
+    summary_input_file = cfg['raw_data_dir'] + cfg['summary_input_file']
+    symbols_output_file = cfg['stox_data_dir'] + cfg['symbols_file']
+
+    start_list = cfg['date_start'].split('-')
+    start_yr = int(start_list[0])
+    start_mo = int(start_list[1])
+    start_d = int(start_list[2])
+
+    end_list = cfg['date_end'].split('-')
+    end_yr = int(end_list[0])
+    end_mo = int(end_list[1])
+    end_d = int(end_list[2])
+
+    PRICES_START_DATE = pd.Timestamp(start_yr, start_mo, start_d)
+    PRICES_END_DATE = pd.Timestamp(end_yr, end_mo, end_d)
     
 
     if not os.path.exists(summary_input_file):
@@ -26,19 +39,11 @@ def filter_symbols(cfg):
         logging.warning("Not parsed: " + summary_input_file + "\n" + str(e))
         sys.exit()
         
-    # drop any symbols that don't cover at least 2009-2019
-    stox_df = stox_df[(stox_df['stock_from_date']<=pd.Timestamp(2009,1,1)) &
-                    (stox_df['stock_to_date']>=pd.Timestamp(2019,1,1))]
+    # drop any symbols that don't cover at least the analysis window
+    stox_df = stox_df[(stox_df['stock_from_date'] <= PRICES_START_DATE) &
+                    (stox_df['stock_to_date'] >= PRICES_END_DATE)]
 
-    #  DEBUG keep small batch of symbols
-    if cfg['use_all_symbols'].lower().startswith('n'):
-        limit = int(cfg['symbols_limit'])
-        stox_df = stox_df[:limit]
-
-    stox_df = stox_df['symbol']
-    logging.info("Writing " + symbols_output_file)
-    stox_df.to_csv(symbols_output_file, index=False)                 
-    logging.info("Symbols shape " + str(stox_df.shape))
-    print(stox_df.head(100))
     logging.info("Done filtering symbols.\n")
+
+    return stox_df['symbol'].tolist()
 

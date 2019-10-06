@@ -31,8 +31,8 @@ def build_intervals(cfg):
 
     # PROPS
     INTERVAL = cfg['stock_hold_time']  # Amount of time between start/end price
-    prices_input_file = cfg['data_dir'] + cfg['prices_filtered_file']
-    prices_output_file = (cfg['data_dir'] + cfg['prices_grouped_prefix'] + 
+    prices_input_file = cfg['stox_data_dir'] + cfg['daily_prices_file']
+    prices_output_file = (cfg['stox_data_dir'] + cfg['prices_grouped_prefix'] + 
                           INTERVAL + ".csv")
 
     #register_matplotlib_converters()
@@ -53,7 +53,8 @@ def build_intervals(cfg):
     percent_complete = 0
     for symbol_name, symbol_df in prices_df:
 
-        logging.info("Processing " + symbol_name + f" ({percent_complete:.1f})")
+        logging.info("Processing " + symbol_name + " (" + 
+                      str(percent_complete) + "%)")
         
         # group into time intervals
         symbol_df = symbol_df.groupby(Grouper(key='date', freq=INTERVAL))
