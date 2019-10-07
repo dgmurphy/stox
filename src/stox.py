@@ -119,7 +119,8 @@ def rm_stoxdir(cfg):
 
 def main():
 
-    cfg = load_config()
+    config = load_config()
+    cfg = config['stox']
     update_symbol_count(cfg)
 
     # make the output dir if needed
@@ -167,7 +168,7 @@ def main():
             run_buy_sell(cfg)
  
         elif reply == "11":
-            save_config()
+            save_config(config)
 
         elif reply == '12':
             rm_stoxdir(cfg)

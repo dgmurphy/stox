@@ -14,11 +14,10 @@ def load_config():
         logging.critical("Exception: " + str(type(e)) + " " + str(e))
         sys.exit()
 
-    cfg = config['stox']
 
-    return cfg
+    return config
 
-def save_config():
+def save_config(config):
     
     ini_filename = "stox.ini"
     with open(ini_filename, 'w') as configfile:

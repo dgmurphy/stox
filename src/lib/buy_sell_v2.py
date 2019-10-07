@@ -66,6 +66,7 @@ def buy_sell_v2(cfg):
                         logging.info("Could not afford " + symbol)
                 else:
                     shares_bought = 0
+                    logging.info("Share price too low " + symbol + ": " + str(buy_price))
                 
                 cost_dollars = shares_bought * buy_price
                 shares_owned = shares_bought
@@ -100,12 +101,12 @@ def buy_sell_v2(cfg):
         
         if num_splits > 0:
             logging.info("# stock splits for " + symbol + ": " + str(num_splits) + "\n")
-            
+
         symnum += 1    # keep track of how many symbols have been processed
 
     # build the output df
     logging.info("Building df...")
-    o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['interval', 'symbol'],
+    o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['symbol', 'interval'],
                         ascending=True)
 
     logging.info("Writing " + buy_sell_output_file)
