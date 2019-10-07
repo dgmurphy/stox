@@ -33,13 +33,17 @@ def buy_sell(cfg):
 
 
     # group and calculate percentage of profitable intervals
-    cols = ['symbol', 'total_intervals', 'percent_black', 'num_black', 'num_red', 'average_gain', 
-            'max_gain', 'max_loss']
+    cols = ['symbol', 'total_intervals', 'percent_black', 'num_black', 
+            'num_red', 'average_gain', 'max_gain', 'max_gain_buy',
+            'max_gain_sell', 'maxloss', 'maxloss_buy', 'maxloss_sell']
+
     rowlst = [] # holder for row
 
     logging.info("Calculating interval stats...")
     stox_grps = stox_df.groupby('symbol')
     for symbol_name, symbol_df in stox_grps:
+        if symbol_name == "AZO":
+            symbol_df.to_csv("AZO.csv")
         num_intervals = len(symbol_df)
         profit_df = symbol_df.loc[symbol_df['profit'] > 0.0]
         num_black = len(profit_df) # number of profitable intervals
@@ -47,8 +51,12 @@ def buy_sell(cfg):
         num_red = num_intervals - num_black
         average_gain = symbol_df['profit'].mean()
         max_gain = symbol_df['profit'].max()
+        max_gain_buy = symbol_df.loc[symbol_df['profit'].idxmax(), 'd0']
+        max_gain_sell = symbol_df.loc[symbol_df['profit'].idxmax(), 'd1']
         max_loss = symbol_df['profit'].min()
-
+        max_loss_buy = symbol_df.loc[symbol_df['profit'].idxmin(), 'd0']
+        max_loss_sell = symbol_df.loc[symbol_df['profit'].idxmin(), 'd1']
+ 
         # format output
         percent_black = str(f"{percent_black:.2f}")
         average_gain = str(f"{average_gain:.2f}")
@@ -56,7 +64,8 @@ def buy_sell(cfg):
         max_loss = str(f"{max_loss:.2f}")
 
         rowlst.append([symbol_name, num_intervals, percent_black, num_black, 
-                       num_red, average_gain, max_gain, max_loss])
+                       num_red, average_gain, max_gain, max_gain_buy, 
+                       max_gain_sell, max_loss, max_loss_buy, max_loss_sell])
 
     o_df = pd.DataFrame(rowlst, columns=cols).sort_values('percent_black',
                         ascending=False)

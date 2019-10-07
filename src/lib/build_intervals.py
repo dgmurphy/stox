@@ -48,9 +48,10 @@ def build_intervals(cfg):
 
     #cols for the output data frame
     cols = ['symbol', 'interval', 'days', 'd0', 'p0', 'd1', 'p1', 'deltap']
-    rowlst = [] # holder for row
+    
     symbol_count = 0
     percent_complete = 0
+    publish_list = []  # the final list of grouped prices
     for symbol_name, symbol_df in prices_df:
 
         logging.info("Processing " + symbol_name + " (" + 
@@ -59,11 +60,17 @@ def build_intervals(cfg):
         # group into time intervals
         symbol_df = symbol_df.groupby(Grouper(key='date', freq=INTERVAL))
         inum = 1  # interval index
+        
+        # create a staging list for this symbol (discard if low average price)
+        staging_list = []
+        rowlst = [] # holder for row
+        max_price = 0.0
+
         for tspan, tspan_df in symbol_df:
 
             # logging.info("processing span: " + str(tspan))
             tspan_df = tspan_df.sort_values(['date']).reindex()
-
+            
             if len(tspan_df) > 0:
                 d0 = tspan_df.iloc[0].loc['date']
                 d1 = tspan_df.iloc[-1].loc['date']
@@ -74,21 +81,38 @@ def build_intervals(cfg):
                 p1 = tspan_df.iloc[-1].loc['close_adjusted']
                 deltap = p1 - p0
 
+                if p0 > max_price: 
+                    max_price = p0
+                if p1 > max_price: 
+                    max_price = p1
+
                 # format output
-                p0 = str(f"{p0:.4f}")
-                p1 = str(f"{p1:.4f}")
+                p0str = str(f"{p0:.4f}")
+                p1str = str(f"{p1:.4f}")
                 deltap = str(f"{deltap:.3f}")
                 delta_days = str(f"{delta_days:.3f}")
 
-                rowlst.append([symbol_name, inum, delta_days, d0, p0, 
-                    d1, p1, deltap])
+                staging_list.append([symbol_name, inum, delta_days, d0, p0str, 
+                                    d1, p1str, deltap])
 
                 inum += 1
 
         symbol_count += 1
         percent_complete = int((symbol_count / num_groups) * 100.0)
+
+        # skip this symbol if it trades at under price_cutoff
+        price_cutoff = 4.0
+        if max_price > price_cutoff:
+            publish_list += staging_list
+            logging.info("Publish list size " + str(len(publish_list)))
+            logging.info("Max price: " + str(max_price))
+
+        else:
+            logging.info("Dropped symbol " + symbol_name + " max price: "
+                         + max_price)
         
-        o_df = pd.DataFrame(rowlst, columns=cols) 
+    
+    o_df = pd.DataFrame(publish_list, columns=cols) 
 
     logging.info("Writing output csv " + prices_output_file)
     o_df.to_csv(prices_output_file, index=False, sep="\t")

@@ -6,6 +6,8 @@ import configparser
 from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
+import pathlib
+from pathlib import Path
 from lib.filter_symbols import *
 from lib.filter_prices import *
 from lib.build_intervals import *
@@ -67,9 +69,14 @@ def set_symbols_limit(current):
 
 
 def get_symbol_file_rows(cfg):
+
     symbol_file = cfg['stox_data_dir'] + cfg['symbols_file']
-    symbol_df = pd.read_table(symbol_file, sep=',')
-    return len(symbol_df)
+
+    if os.path.exists(symbol_file):
+        symbol_df = pd.read_table(symbol_file, sep=',')
+        return len(symbol_df)
+    else:
+        return 0
 
 
 def update_symbol_count(cfg):
@@ -80,21 +87,33 @@ def update_symbol_count(cfg):
 def write_symbols(cfg):
     logging.info("Running symbols filter...")
     sort_symbols_by_eps(cfg)
+    input("OK >")
 
 
 def run_prices_filter(cfg):
     logging.info("Running prices filter...")
     filter_prices(cfg)
+    input("OK >")
 
 
 def run_intervals(cfg):
     logging.info("Running intervals...")
     build_intervals(cfg)
+    input("OK >")
 
 
 def run_buy_sell(cfg):
     logging.info("Running buy-sell...")
     buy_sell(cfg)
+    input("OK >")
+
+
+def rm_stoxdir(cfg):
+    stox_dir = cfg['stox_data_dir'] 
+    for p in Path(stox_dir).glob("*.csv"):
+        p.unlink()
+    logging.info("Removed stox data.")
+    input("OK >")
 
 
 def main():
@@ -112,6 +131,11 @@ def main():
 
     cfg = config['stox']
     update_symbol_count(cfg)
+
+    # make the output dir if needed
+    stox_dir = cfg['stox_data_dir']
+    pathlib.Path(stox_dir).mkdir(exist_ok=True)
+
 
     reply = ""
     while reply != "q":
@@ -157,6 +181,9 @@ def main():
                 config.write(configfile)
             logging.info("Saved " + ini_filename)
 
+        elif reply == '12':
+            rm_stoxdir(cfg)
+
     
 def show_menu(cfg):
 
@@ -188,6 +215,7 @@ def show_menu(cfg):
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
     prompt += "\n10) Update buy-sell analysis"
     prompt += "\n11) Save config"
+    prompt += "\n12) Delete generated data"
     prompt += "\nq) Quit"
     prompt += "\nstox > "
     reply = input(prompt)
