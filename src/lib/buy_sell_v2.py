@@ -65,10 +65,12 @@ def buy_sell_v2(cfg):
                 logging.info("Stock split for " + symbol + " coeff: " + split_coeff_str)
 
             cdate = row.date  # date in this row
-            ebd = (cdate - bdate).days    # bus. days since buy date
+
+            # TODO this needs to be business days!
+            ebd = (cdate - bdate).days    # days since buy date
             logging.info(f"Date in this row {cdate}. Elapsed days: {ebd}")
 
-            if ebd >= hold_days:
+            if ebd >= (hold_days - 1):
                 # sell
                 sell_price = (float(row.open) + float(row.close)) / 2.0
                 sold_dollars = shares_owned * sell_price
@@ -80,10 +82,12 @@ def buy_sell_v2(cfg):
                 interval += 1
                 logging.info(f"{cdate} sold {shares_owned} at {sell_price} gain: {gain}")
 
-    o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['symbol', 'interval'],
-                        ascending=False)
+    o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['interval', 'symbol'],
+                        ascending=True)
 
     o_df.to_csv(buy_sell_output_file, index=False, sep=",")
+    logging.info("Buy-sell output shape: " + str(o_df.shape))
+    logging.info("Wrote buy-sell output file: " + buy_sell_output_file)
 
 if __name__ == '__main__':
 

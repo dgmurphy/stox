@@ -6,7 +6,9 @@ from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
 
-def buy_sell(cfg):
+
+# Summarize the buy-sell results
+def get_stats(cfg):
 
     prices_input_file = (cfg['stox_data_dir'] + cfg['prices_grouped_prefix'] + 
                           cfg['stock_hold_time'] + ".csv")

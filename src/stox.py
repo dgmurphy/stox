@@ -11,7 +11,6 @@ from pathlib import Path
 from lib.filter_symbols import *
 from lib.filter_prices import *
 from lib.build_intervals import *
-from lib.buy_sell import *
 from lib.buy_sell_v2 import *
 from lib.sort_symbols_by_eps import *
 from lib.load_config import load_config
@@ -106,7 +105,7 @@ def run_intervals(cfg):
 
 def run_buy_sell(cfg):
     logging.info("Running buy-sell...")
-    buy_sell(cfg)
+    buy_sell_v2(cfg)
     input("OK >")
 
 
@@ -121,11 +120,6 @@ def rm_stoxdir(cfg):
 def main():
 
     cfg = load_config()
-
-    # DBEUG
-    buy_sell_v2(cfg)
-    sys.exit()
-
     update_symbol_count(cfg)
 
     # make the output dir if needed
