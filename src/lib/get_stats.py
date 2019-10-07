@@ -10,18 +10,14 @@ from lib.ntlogging import logging
 # Summarize the buy-sell results
 def get_stats(cfg):
 
-    prices_input_file = (cfg['stox_data_dir'] + cfg['prices_grouped_prefix'] + 
-                          cfg['stock_hold_time'] + ".csv")
-    buy_sell_output_file = cfg['stox_data_dir'] + cfg['buy_sell_results']
-    budget_dollars = float(cfg['budget_dollars'])
-    fee_dollars = float(cfg['tx_fee'])
+    buy_sell_input_file = (cfg['stox_data_dir'] + cfg['buy_sell_results']
 
     try:
-        logging.info("Reading: " + prices_input_file)
-        stox_df = pd.read_table(prices_input_file, sep='\t')
+        logging.info("Reading: " + buy_sell_input_file)
+        stats_df = pd.read_table(buy_sell_input_file, sep=',').groupby('symbol')
         
     except Exception as e:
-        logging.warning("Not parsed: " + prices_input_file + "\n" + str(e))
+        logging.warning("Not parsed: " + buy_sell_input_file + "\n" + str(e))
         sys.exit()
 
     # drop very short durations (< 4 days)

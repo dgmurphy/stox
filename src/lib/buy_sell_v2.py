@@ -30,8 +30,8 @@ def buy_sell_v2(cfg):
         sys.exit()
 
     # columns for output dataframe
-    cols = ['symbol', 'interval', 'days_held', 'buy_date', 
-            'shares_bought', 'buy_price', 'sell_date', 
+    cols = ['symbol', 'interval', 'trading_days_held', 'cal_days_held',
+            'buy_date', 'shares_bought', 'buy_price', 'sell_date', 
             'shares_sold', 'sell_price', 'gain_total']
 
     rowlist = []  # holder for df row
@@ -40,6 +40,7 @@ def buy_sell_v2(cfg):
     for symbol, sym_df in stox_df:
 
         interval = 1
+        etd = 0   #  elapsed trading days
         buying = True 
         
         # loop until hold time elapses
@@ -65,22 +66,26 @@ def buy_sell_v2(cfg):
                 logging.info("Stock split for " + symbol + " coeff: " + split_coeff_str)
 
             cdate = row.date  # date in this row
+            logging.info(f"Date in this row {cdate}. Elapsed trading days: {etd}")
+            etd += 1  # increment elapsed trading days
 
-            # TODO this needs to be business days!
-            ebd = (cdate - bdate).days    # days since buy date
-            logging.info(f"Date in this row {cdate}. Elapsed days: {ebd}")
-
-            if ebd >= (hold_days - 1):
+            # Sell when number of trading days > hold time
+            if etd > hold_days:
                 # sell
+                cal_days = (cdate - bdate).days
                 sell_price = (float(row.open) + float(row.close)) / 2.0
                 sold_dollars = shares_owned * sell_price
                 gain = sold_dollars - cost_dollars
-                rowlist.append([symbol, interval, ebd, bdate,  
+                rowlist.append([symbol, interval, (etd - 1), cal_days, bdate,  
                                 shares_bought, buy_price, cdate,
                                 shares_owned, sell_price, gain])
+
+                etd = 0  # reset elapsed training days
                 buying = True
                 interval += 1
                 logging.info(f"{cdate} sold {shares_owned} at {sell_price} gain: {gain}")
+            
+            
 
     o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['interval', 'symbol'],
                         ascending=True)
