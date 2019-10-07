@@ -98,7 +98,9 @@ def buy_sell_v2(cfg):
                 interval += 1
                 #logging.info(f"{cdate} sold {shares_owned} at {sell_price} gain: {gain}")
         
-        logging.info("# stock splits for " + symbol + ": " + str(num_splits) + "\n")
+        if num_splits > 0:
+            logging.info("# stock splits for " + symbol + ": " + str(num_splits) + "\n")
+            
         symnum += 1    # keep track of how many symbols have been processed
 
     # build the output df
