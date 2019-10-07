@@ -45,14 +45,13 @@ def buy_sell_v2(cfg):
 
         interval = 1
         etd = 0   #  elapsed trading days
+        num_splits = 0
         buying = True 
         
         # loop until hold time elapses
         # TODO REFACTOR FOR SPEED
         # update shares owned based on splits until sell date
         for row in sym_df.itertuples():
-
-            num_splits = 0
 
             if buying:
                 bdate = row.date  # buy date
@@ -65,7 +64,6 @@ def buy_sell_v2(cfg):
                     shares_bought = floor(budget_dollars / buy_price)
                     if shares_bought < 1:
                         logging.info("Could not afford " + symbol)
-                        
                 else:
                     shares_bought = 0
                 
@@ -104,9 +102,11 @@ def buy_sell_v2(cfg):
         symnum += 1    # keep track of how many symbols have been processed
 
     # build the output df
+    logging.info("Building df...")
     o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['interval', 'symbol'],
                         ascending=True)
 
+    logging.info("Writing " + buy_sell_output_file)
     o_df.to_csv(buy_sell_output_file, index=False, sep=",")
     logging.info("Buy-sell output shape: " + str(o_df.shape))
     logging.info("Wrote buy-sell output file: " + buy_sell_output_file)

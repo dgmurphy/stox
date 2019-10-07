@@ -17,3 +17,11 @@ def load_config():
     cfg = config['stox']
 
     return cfg
+
+def save_config():
+    
+    ini_filename = "stox.ini"
+    with open(ini_filename, 'w') as configfile:
+        config.write(configfile)
+        logging.info("Saved " + ini_filename)
+

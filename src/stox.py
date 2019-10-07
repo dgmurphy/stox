@@ -13,7 +13,7 @@ from lib.filter_prices import *
 from lib.build_intervals import *
 from lib.buy_sell_v2 import *
 from lib.sort_symbols_by_eps import *
-from lib.load_config import load_config
+from lib.load_config import *
 
 
 def set_budget(current):
@@ -167,9 +167,7 @@ def main():
             run_buy_sell(cfg)
  
         elif reply == "11":
-            with open(ini_filename, 'w') as configfile:
-                config.write(configfile)
-            logging.info("Saved " + ini_filename)
+            save_config()
 
         elif reply == '12':
             rm_stoxdir(cfg)
