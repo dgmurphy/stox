@@ -35,8 +35,12 @@ def buy_sell_v2(cfg):
             'shares_sold', 'sell_price', 'gain_total']
 
     rowlist = []  # holder for df row
-    numsyms = len(stox_df)
-    symnum = 1
+    numsyms = len(stox_df)  # total number of symbols
+    symnum = 1  # symbol idx
+
+    cant_afford = {}  # set of symbols whose unit share price exceeds budget
+    penny_stocks = {}  # set of low price symbols
+
     # Loop over each symbol
     for symbol, sym_df in stox_df:
 
@@ -63,9 +67,11 @@ def buy_sell_v2(cfg):
                     # can only buy whole shares
                     shares_bought = floor(budget_dollars / buy_price)
                     if shares_bought < 1:
+                        cant_afford.add(symbol)
                         logging.info("Could not afford " + symbol)
                 else:
                     shares_bought = 0
+                    penny_stocks.add(symbol)
                     logging.info("Share price too low " + symbol + ": " + str(buy_price))
                 
                 cost_dollars = shares_bought * buy_price
@@ -113,6 +119,8 @@ def buy_sell_v2(cfg):
     o_df.to_csv(buy_sell_output_file, index=False, sep=",")
     logging.info("Buy-sell output shape: " + str(o_df.shape))
     logging.info("Wrote buy-sell output file: " + buy_sell_output_file)
+    logging.info("Zero shares bought (price exceeds budget): " + str(cant_afford))
+    logging.info("Zero shares bought (price too low): " + str(penny_stocks))
 
 if __name__ == '__main__':
 
