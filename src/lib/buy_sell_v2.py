@@ -35,9 +35,13 @@ def buy_sell_v2(cfg):
             'shares_sold', 'sell_price', 'gain_total']
 
     rowlist = []  # holder for df row
-
+    numsyms = len(stox_df)
+    symnum = 1
     # Loop over each symbol
     for symbol, sym_df in stox_df:
+
+        logging.info("Processing symbol: " + symbol + 
+                     "  [" + str(symnum) + " of " + str(numsyms) +"]")
 
         interval = 1
         etd = 0   #  elapsed trading days
@@ -48,25 +52,36 @@ def buy_sell_v2(cfg):
         # update shares owned based on splits until sell date
         for row in sym_df.itertuples():
 
+            num_splits = 0
+
             if buying:
                 bdate = row.date  # buy date
                 buy_price = (float(row.open) + float(row.close)) / 2.0
+
+                # skip if buy price is very small 
+                epsilon = .0001
+                if buy_price > epsilon:
+                    # can only buy whole shares
+                    shares_bought = floor(budget_dollars / buy_price)
+                    if shares_bought < 1:
+                        logging.info("Could not afford " + symbol)
+                        
+                else:
+                    shares_bought = 0
                 
-                # can only buy whole shares
-                shares_bought = floor(budget_dollars / buy_price)  # could be 0
                 cost_dollars = shares_bought * buy_price
                 shares_owned = shares_bought
                 buying = False
-                logging.info(f"{bdate} bought {shares_bought} at {buy_price} for {cost_dollars}")
+                #logging.info(f"{bdate} bought {shares_bought} at {buy_price} for {cost_dollars}")
                 
             split_coeff_str = f"{row.split_coefficient:.1}"
             if split_coeff_str != "1e+00":
                 split_coeff = float(row.split_coefficient)
                 shares_owned = shares_owned * split_coeff
-                logging.info("Stock split for " + symbol + " coeff: " + split_coeff_str)
+                num_splits += 1
 
             cdate = row.date  # date in this row
-            logging.info(f"Date in this row {cdate}. Elapsed trading days: {etd}")
+            #logging.info(f"Date in this row {cdate}. Elapsed trading days: {etd}")
             etd += 1  # increment elapsed trading days
 
             # Sell when number of trading days > hold time
@@ -83,10 +98,12 @@ def buy_sell_v2(cfg):
                 etd = 0  # reset elapsed training days
                 buying = True
                 interval += 1
-                logging.info(f"{cdate} sold {shares_owned} at {sell_price} gain: {gain}")
-            
-            
+                #logging.info(f"{cdate} sold {shares_owned} at {sell_price} gain: {gain}")
+        
+        logging.info("# stock splits for " + symbol + ": " + str(num_splits) + "\n")
+        symnum += 1    # keep track of how many symbols have been processed
 
+    # build the output df
     o_df = pd.DataFrame(rowlist, columns=cols).sort_values(['interval', 'symbol'],
                         ascending=True)
 
