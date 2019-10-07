@@ -12,7 +12,9 @@ from lib.filter_symbols import *
 from lib.filter_prices import *
 from lib.build_intervals import *
 from lib.buy_sell import *
+from lib.buy_sell_v2 import *
 from lib.sort_symbols_by_eps import *
+from lib.load_config import load_config
 
 
 def set_budget(current):
@@ -118,18 +120,12 @@ def rm_stoxdir(cfg):
 
 def main():
 
-    # Config parser
-    ini_filename = "stox.ini"
-    #logging.info("Reading config from: " + ini_filename)
-    config = configparser.ConfigParser()
-    try:
-        config.read(ini_filename)
-    except Exception as e: 
-        logging.critical("Error reading .ini file: " + ini_filename)
-        logging.critical("Exception: " + str(type(e)) + " " + str(e))
-        sys.exit()
+    cfg = load_config()
 
-    cfg = config['stox']
+    # DBEUG
+    buy_sell_v2(cfg)
+    sys.exit()
+
     update_symbol_count(cfg)
 
     # make the output dir if needed
@@ -208,12 +204,12 @@ def show_menu(cfg):
     prompt += "\n2) Change window end date: " + cfg['date_end']
     prompt += "\n3) Change symbols limit (n highest EPS): " + cfg['symbols_limit']
     prompt += "\n4) Update symbols file"
-    prompt += "\n5) Update daily prices list"
+    prompt += "\n5) Filter daily prices list"
     prompt += "\n6) Set hold interval: " + cfg['stock_hold_time']   
-    prompt += "\n7) Update interval prices list"
+    prompt += "\n7) NA"
     prompt += "\n8) Change purchasing budget: " + cfg['budget_dollars']
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
-    prompt += "\n10) Update buy-sell analysis"
+    prompt += "\n10) Run buy-sell process"
     prompt += "\n11) Save config"
     prompt += "\n12) Delete generated data"
     prompt += "\nq) Quit"

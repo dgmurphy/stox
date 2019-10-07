@@ -48,7 +48,7 @@ def filter_prices(cfg):
     logging.info("Filtering prices with symbols. ")
 
     prices_df = prices_df[prices_df['symbol'].isin(symbols)]
-    prices_df = prices_df.drop(['open', 'high', 'low'], axis=1)
+    prices_df = prices_df.drop(['high', 'low'], axis=1)
     logging.info("Filtered symbols df shape " + str(prices_df.shape))
 
     logging.info("Filtering by date range.")
