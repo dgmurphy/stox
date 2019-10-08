@@ -38,8 +38,8 @@ def buy_sell_v2(cfg):
     numsyms = len(stox_df)  # total number of symbols
     symnum = 1  # symbol idx
 
-    cant_afford = {}  # set of symbols whose unit share price exceeds budget
-    penny_stocks = {}  # set of low price symbols
+    cant_afford = set()  # set of symbols whose unit share price exceeds budget
+    penny_stocks = set()  # set of low price symbols
 
     # Loop over each symbol
     for symbol, sym_df in stox_df:

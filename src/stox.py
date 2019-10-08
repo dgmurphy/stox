@@ -173,6 +173,9 @@ def main():
         elif reply == '12':
             rm_stoxdir(cfg)
 
+        elif reply == '13':
+            if os.path.exists("log-stox.log"):
+                os.remove("log-stox.log")
     
 def show_menu(cfg):
 
@@ -205,6 +208,7 @@ def show_menu(cfg):
     prompt += "\n10) Run buy-sell process"
     prompt += "\n11) Save config"
     prompt += "\n12) Delete generated data"
+    prompt += "\n13) Delete the log"
     prompt += "\nq) Quit"
     prompt += "\nstox > "
     reply = input(prompt)
