@@ -46,7 +46,7 @@ def main():
     proc_starttime = datetime.now()
     logging.info("Processing started: " + str(proc_starttime))
 
-    prices_input_file = "../data/stock_prices_filtered.csv"
+    prices_input_file = "../data/raw/stock_prices_latest.csv"
 
     register_matplotlib_converters()
         
@@ -64,22 +64,22 @@ def main():
             num_splits += 1
         if min_split < 1.0:
             num_rsplits += 1
-            #logging.info(str(name) + " r split " + str(min_split))
+            logging.info(str(name) + " r split " + str(min_split))
     
     logging.info(str(num_splits) + " symbols with splits > 1") 
     logging.info(str(num_rsplits) + " symbols with splits < 1") 
 
     # plot split coeff
-    grpname = "BRK.A"
-    grp = prices_df.get_group(grpname)
-    plot_price(grpname, grp, pd.Timestamp(2009,1,1), pd.Timestamp(2019, 1, 1))
+    #grpname = "BRK.A"
+    #grp = prices_df.get_group(grpname)
+    #plot_price(grpname, grp, pd.Timestamp(2009,1,1), pd.Timestamp(2019, 1, 1))
 
 
     proc_endtime = datetime.now()
     logging.info(("Total Processing time (min): " + 
         str((proc_endtime - proc_starttime).total_seconds() / 60.0)))
 
-    plt.show()
+    #plt.show()
 
 
 if __name__ == '__main__':

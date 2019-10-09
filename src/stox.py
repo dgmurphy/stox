@@ -11,7 +11,7 @@ from pathlib import Path
 from lib.filter_symbols import *
 from lib.filter_prices import *
 from lib.build_intervals import *
-from lib.buy_sell_v2 import *
+from lib.buy_sell_v3 import *
 from lib.sort_symbols_by_eps import *
 from lib.load_config import *
 
@@ -105,7 +105,7 @@ def run_intervals(cfg):
 
 def run_buy_sell(cfg):
     logging.info("Running buy-sell...")
-    buy_sell_v2(cfg)
+    buy_sell_v3(cfg)
     input("OK >")
 
 
@@ -173,7 +173,8 @@ def main():
         elif reply == '12':
             rm_stoxdir(cfg)
 
-        elif reply == '13':
+        elif reply == '0':
+            logging.shutdown()
             if os.path.exists("log-stox.log"):
                 os.remove("log-stox.log")
     
@@ -196,19 +197,19 @@ def show_menu(cfg):
                 str(num_symbols) + "\n")
                
 
+    prompt += "\n0) Delete the log"
     prompt += "\n1) Change window start date: " + cfg['date_start']
     prompt += "\n2) Change window end date: " + cfg['date_end']
     prompt += "\n3) Change symbols limit (n highest EPS): " + cfg['symbols_limit']
     prompt += "\n4) Update symbols file"
     prompt += "\n5) Filter daily prices list"
-    prompt += "\n6) Set hold interval: " + cfg['stock_hold_time']   
+    prompt += "\n6) Set hold interval (days): " + cfg['stock_hold_time']   
     prompt += "\n7) NA"
     prompt += "\n8) Change purchasing budget: " + cfg['budget_dollars']
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
     prompt += "\n10) Run buy-sell process"
     prompt += "\n11) Save config"
     prompt += "\n12) Delete generated data"
-    prompt += "\n13) Delete the log"
     prompt += "\nq) Quit"
     prompt += "\nstox > "
     reply = input(prompt)
