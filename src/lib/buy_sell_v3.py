@@ -21,6 +21,12 @@ def buy_sell_v3(cfg):
     fee_dollars = float(cfg['tx_fee'])
     hold_days = int(cfg['stock_hold_time'])
 
+    # clean up the existing output file (ignore !exists error)
+    try:
+        os.remove(buy_sell_output_file)
+    except OSError:
+        pass   
+
     # load prices and group by symbol
     try:
         logging.info("Reading: " + prices_input_file)
@@ -38,7 +44,7 @@ def buy_sell_v3(cfg):
             'buy_date', 'shares_bought', 'buy_price', 'sell_date', 
             'shares_sold', 'sell_price', 'gain_total']
     
-    results_lst = []   # completed transactions
+    
     numsyms = len(stox_df)  # total number of symbols
     cant_afford = set()  # set of symbols whose unit share price exceeds budget
     penny_stocks = set()  # set of low price symbols
@@ -48,10 +54,12 @@ def buy_sell_v3(cfg):
     for symbol, sym_df in stox_df:
 
         logging.info("Processing symbol: " + symbol + 
-                     "  [" + str(symnum) + " of " + str(numsyms) +"] " +
-                     " # trading days: " + len(sym_df))
+                     "  \t\t[" + str(symnum) + " of " + str(numsyms) +"] " +
+                     " \t\t# trading days: " + str(len(sym_df)))
 
+        results_lst = []   # completed transactions for this symbol
         pending_lst = []   # buy attributes for each buy date
+
         row_idx = 0
         for row in sym_df.itertuples():
 
@@ -70,7 +78,7 @@ def buy_sell_v3(cfg):
             # Once the pending sales list is full, start creating results list
             if row_idx >= hold_days:  
 
-                result_row = sell_row(row, pending_lst, results_lst)
+                result_row = sell_row(row, pending_lst)
                 # add the result row to results list
                 results_lst.append(result_row)
                 # remove the sold row 
@@ -78,22 +86,22 @@ def buy_sell_v3(cfg):
 
             row_idx += 1
 
-        symnum += 1    # keep track of how many symbols have been processed
-
-    # build the output df
-    logging.info(f"Processed {symnum} symbols. Writing df...")
-    o_df = pd.DataFrame(results_lst, columns=cols).sort_values(['symbol', 'interval'],
+        # build df and append to csv
+        #logging.info(f"Updating file {buy_sell_output_file} for symbol {symbol}")
+        out_df = pd.DataFrame(results_lst, columns=cols).sort_values(['symbol', 'interval'],
                         ascending=True)
 
-    logging.info("Writing " + buy_sell_output_file)
-    o_df.to_csv(buy_sell_output_file, index=False, sep=",", float_format='%.3f')
-    logging.info("Buy-sell output shape: " + str(o_df.shape))
-    logging.info("Wrote buy-sell output file: " + buy_sell_output_file)
+        use_header = True if symnum == 1 else False
+        with open(buy_sell_output_file, 'a') as f:
+            out_df.to_csv(f, index=False, sep=",", float_format='%.3f', header=use_header)
+
+        symnum += 1    # keep track of how many symbols have been processed
+            
     logging.info("Zero shares bought (price exceeds budget): " + str(cant_afford))
     logging.info("Zero shares bought (price too low): " + str(penny_stocks))
 
 
-def sell_row(row, pending_lst, results_lst):
+def sell_row(row, pending_lst):
 
     sold_row = pending_lst[0]
     symbol = sold_row[0]
@@ -124,8 +132,6 @@ def sell_row(row, pending_lst, results_lst):
                   buy_date, shares_bought, buy_price,
                   sell_date, shares_owned, sell_price,
                   gain_total]
-    
-    logging.info("Result row " + str(result_row))
 
     return result_row
 
