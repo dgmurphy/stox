@@ -13,6 +13,7 @@ from lib.load_config import load_config
 # A sale will close out the first item from the pending list, adjust the shares
 # owned at the sell date by the split coefficients, and append the sale
 # to  the results_lst.  The final dataframe is built from the results_lst.
+
 def buy_sell_v3(cfg):
 
     prices_input_file = (cfg['stox_data_dir'] + cfg['daily_prices_file'])
@@ -49,6 +50,9 @@ def buy_sell_v3(cfg):
     cant_afford = set()  # set of symbols whose unit share price exceeds budget
     penny_stocks = set()  # set of low price symbols
 
+    results_lst = []  # completed transactions
+    write_header = True  # results file header (write once flag)
+
     # Loop over each symbol
     symnum = 1  # symbol idx
     for symbol, sym_df in stox_df:
@@ -57,8 +61,7 @@ def buy_sell_v3(cfg):
                      "  \t\t[" + str(symnum) + " of " + str(numsyms) +"] " +
                      " \t\t# trading days: " + str(len(sym_df)))
 
-        results_lst = []   # completed transactions for this symbol
-        pending_lst = []   # buy attributes for each buy date
+        pending_lst = []   # has buy attributes for each buy date
 
         row_idx = 0
         for row in sym_df.itertuples():
@@ -79,26 +82,50 @@ def buy_sell_v3(cfg):
             if row_idx >= hold_days:  
 
                 result_row = sell_row(row, pending_lst)
+
                 # add the result row to results list
                 results_lst.append(result_row)
+                
                 # remove the sold row 
                 del pending_lst[0]
 
             row_idx += 1
 
-        # build df and append to csv
-        #logging.info(f"Updating file {buy_sell_output_file} for symbol {symbol}")
-        out_df = pd.DataFrame(results_lst, columns=cols).sort_values(['symbol', 'interval'],
-                        ascending=True)
-
-        use_header = True if symnum == 1 else False
-        with open(buy_sell_output_file, 'a') as f:
-            out_df.to_csv(f, index=False, sep=",", float_format='%.3f', header=use_header)
+        # peridocially write the results list
+        qmax = 100000
+        if len(results_lst) >= qmax:
+            append_csv(buy_sell_output_file, results_lst, cols, writer_header)
+            write_header = False
+            logging.info(f"Wrote {qmax} results to {buy_sell_output_file}")
+            results_lst = []
 
         symnum += 1    # keep track of how many symbols have been processed
-            
-    logging.info("Zero shares bought (price exceeds budget): " + str(cant_afford))
-    logging.info("Zero shares bought (price too low): " + str(penny_stocks))
+
+    # final csv update
+    if len(results_lst) > 0:
+        append_csv(buy_sell_output_file, results_lst, cols, write_header)
+        logging.info(f"Wrote {len(results_lst)} results to {buy_sell_output_file}")
+    
+    logging.info("Zero shares bought (price exceeds budget): " + 
+                 str(cant_afford))
+    logging.info("Zero shares bought (price too low): " + 
+                 str(penny_stocks))
+
+
+# Drop unwanted rows and update csv
+def append_csv(csv_file, results_lst, cols, write_header):
+
+    out_df = pd.DataFrame(results_lst, columns=cols).sort_values(['symbol', 
+                          'interval'], ascending=True)
+
+    # Drop zero-shares transactions
+    out_df = out_df[out_df.shares_bought > 0]
+
+    # TODO drop penny stock transactions (maybe)
+
+    with open(csv_file, 'a') as f:
+        out_df.to_csv(f, index=False, sep=",", float_format='%.3f', 
+                      header=write_header)
 
 
 def sell_row(row, pending_lst):
