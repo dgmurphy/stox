@@ -103,8 +103,8 @@ def buy_sell_v3(cfg):
 
     # final csv update
     if len(results_lst) > 0:
+        logging.info(f"Writing {len(results_lst)} results to {buy_sell_output_file}")
         append_csv(buy_sell_output_file, results_lst, cols, write_header)
-        logging.info(f"Wrote {len(results_lst)} results to {buy_sell_output_file}")
     
     logging.info("Zero shares bought (price exceeds budget): " + 
                  str(cant_afford))
