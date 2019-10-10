@@ -43,7 +43,7 @@ def buy_sell_v3(cfg):
     # columns for output dataframe
     cols = ['symbol', 'interval', 'trading_days_held', 'cal_days_held',
             'buy_date', 'shares_bought', 'buy_price', 'sell_date', 
-            'shares_sold', 'sell_price', 'gain_total']
+            'shares_sold', 'sell_price', 'fee', 'gain_total']
     
     
     numsyms = len(stox_df)  # total number of symbols
@@ -81,7 +81,7 @@ def buy_sell_v3(cfg):
             # Once the pending sales list is full, start creating results list
             if row_idx >= hold_days:  
 
-                result_row = sell_row(row, pending_lst)
+                result_row = sell_row(row, pending_lst, fee_dollars)
 
                 # add the result row to results list
                 results_lst.append(result_row)
@@ -128,7 +128,7 @@ def append_csv(csv_file, results_lst, cols, write_header):
                       header=write_header)
 
 
-def sell_row(row, pending_lst):
+def sell_row(row, pending_lst, fee):
 
     sold_row = pending_lst[0]
     symbol = sold_row[0]
@@ -153,12 +153,12 @@ def sell_row(row, pending_lst):
 
     cal_days = (sell_date - buy_date).days
     trading_days = len(pending_lst) - 1
-    gain_total = sold_dollars - cost_dollars
+    gain_total = sold_dollars - cost_dollars - fee
 
     result_row = [symbol, idx, trading_days, cal_days,
                   buy_date, shares_bought, buy_price,
                   sell_date, shares_owned, sell_price,
-                  gain_total]
+                  fee, gain_total]
 
     return result_row
 

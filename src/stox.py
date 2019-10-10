@@ -128,34 +128,42 @@ def main():
     pathlib.Path(stox_dir).mkdir(exist_ok=True)
 
 
-    reply = ""
+    reply = "none"
     while reply != "q":
-        reply = show_menu(cfg)
-        if reply == "1":
+
+        # pass the last reply in to menu to show last command
+        reply = show_menu(cfg, reply)
+
+        if reply == '0':
+            logging.shutdown()
+            if os.path.exists("log-stox.log"):
+                os.remove("log-stox.log")
+
+        elif reply == '1':
+            rm_stoxdir(cfg)
+
+        elif reply == "2":
             cfg['date_start'] = set_prices_date_start(
                 cfg['date_start'])
             update_symbol_count(cfg)
 
-        elif reply == "2":
+        elif reply == "3":
             cfg['date_end'] = set_prices_date_end(
                 cfg['date_end'])
             update_symbol_count(cfg)
-          
-        elif reply == "3":
+         
+        elif reply == "4":
             cfg['symbols_limit'] = set_symbols_limit(cfg['symbols_limit'])
 
-        elif reply == "4":
+        elif reply == "5":
             write_symbols(cfg)
 
-        elif reply == "5":
+        elif reply == "6":
             run_prices_filter(cfg)
 
-        elif reply == "6":
+        elif reply == "7":
             cfg['stock_hold_time'] = set_stock_hold_time(
                 cfg['stock_hold_time'])
-
-        elif reply == "7":
-            run_intervals(cfg)
 
         elif reply == "8":
             cfg['budget_dollars'] = set_budget(
@@ -167,26 +175,22 @@ def main():
         elif reply == "10":
             run_buy_sell(cfg)
  
-        elif reply == "11":
-            save_config(config)
+    # save before exit
+    save_config(config)
 
-        elif reply == '12':
-            rm_stoxdir(cfg)
 
-        elif reply == '0':
-            logging.shutdown()
-            if os.path.exists("log-stox.log"):
-                os.remove("log-stox.log")
-    
-def show_menu(cfg):
+# Kaggle:
+# https://www.kaggle.com/tsaustin/us-historical-stock-prices-with-earnings-data
+
+def show_menu(cfg, previous):
 
     num_symbols = get_symbol_file_rows(cfg)
 
     # menu
     prompt = "\n---- STOX MENU ----"
 
-    prompt += "\n\n First date in data set: TBD"
-    prompt += "\n Last date in data set: TBD"
+    prompt += "\n\n First date in data set: 1998-01-02"
+    prompt += "\n Last date in data set: 2019-08-09"
     prompt += "\n Available stock symbols in entire data set: 7091\n"
     
     prompt += "\n Current window start date: " + cfg['date_start']
@@ -195,28 +199,25 @@ def show_menu(cfg):
                cfg['num_symbols_in_window'] + "\n")
     prompt += ("\n # symbols in current symbol file: " + 
                 str(num_symbols) + "\n")
-               
 
+    prompt += "\nCommands:"           
     prompt += "\n0) Delete the log"
-    prompt += "\n1) Change window start date: " + cfg['date_start']
-    prompt += "\n2) Change window end date: " + cfg['date_end']
-    prompt += "\n3) Change symbols limit (n highest EPS): " + cfg['symbols_limit']
-    prompt += "\n4) Update symbols file"
-    prompt += "\n5) Filter daily prices list"
-    prompt += "\n6) Set hold interval (days): " + cfg['stock_hold_time']   
-    prompt += "\n7) NA"
+    prompt += "\n1) Delete generated data"
+    prompt += "\n2) Change window start date: " + cfg['date_start']
+    prompt += "\n3) Change window end date: " + cfg['date_end']
+    prompt += "\n4) Change symbols limit (n highest EPS): " + cfg['symbols_limit']
+    prompt += "\n5) Update symbols file"
+    prompt += "\n6) Filter daily prices list"
+    prompt += "\n7) Set hold interval (days): " + cfg['stock_hold_time']   
     prompt += "\n8) Change purchasing budget: " + cfg['budget_dollars']
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
     prompt += "\n10) Run buy-sell process"
-    prompt += "\n11) Save config"
-    prompt += "\n12) Delete generated data"
     prompt += "\nq) Quit"
+    prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "
     reply = input(prompt)
 
     return reply.strip()
-
-
 
 
 if __name__ == '__main__':
