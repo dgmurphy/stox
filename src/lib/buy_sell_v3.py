@@ -94,9 +94,9 @@ def buy_sell_v3(cfg):
         # peridocially write the results list
         qmax = 100000
         if len(results_lst) >= qmax:
+            logging.info(f"Writing {qmax} results to {buy_sell_output_file}")
             append_csv(buy_sell_output_file, results_lst, cols, write_header)
             write_header = False
-            logging.info(f"Wrote {qmax} results to {buy_sell_output_file}")
             results_lst = []
 
         symnum += 1    # keep track of how many symbols have been processed
