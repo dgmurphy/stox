@@ -15,6 +15,7 @@ from lib.buy_sell_v3 import *
 from lib.sort_symbols_by_eps import *
 from lib.load_config import *
 from lib.analyze import *
+from lib.plot_price import *
 
 
 def set_budget(current):
@@ -78,6 +79,15 @@ def set_symbols_limit(current):
         return reply
 
 
+def set_plot_params(current):
+    prompt = "\nPlot params [" + current + "] > "
+    reply = input(prompt).strip()
+    if len(reply) < 1: 
+        return current
+    else:
+        return reply
+
+
 def get_symbol_file_rows(cfg):
 
     symbol_file = cfg['stox_data_dir'] + cfg['symbols_file']
@@ -129,6 +139,10 @@ def run_analysis(cfg):
     logging.info("Running analysis...")
     analyze(cfg)
     input("OK >")
+
+def run_price_plot(cfg):
+    logging.info("Running price plot...")
+    plot_price(cfg)
 
 
 def main():
@@ -196,7 +210,15 @@ def main():
 
         elif reply == "12":
             run_analysis(cfg)
- 
+
+        elif reply == "13":
+            cfg['plot_params'] = set_plot_params(
+                cfg['plot_params'])
+
+        elif reply == "14":
+            run_price_plot(cfg)
+
+
     # save before exit
     save_config(config)
 
@@ -236,6 +258,8 @@ def show_menu(cfg, previous):
     prompt += "\n10) Change low-price cutoff: " + cfg['low_price_cutoff']
     prompt += "\n11) Run buy-sell process"
     prompt += "\n12) Analyze buy-sell results"
+    prompt += "\n13) Change plot params: " + cfg['plot_params']
+    prompt += "\n14) Plot prices"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "

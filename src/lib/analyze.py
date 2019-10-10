@@ -7,11 +7,7 @@ from datetime import datetime, timedelta
 from lib.ntlogging import logging
 from lib.load_config import load_config
 
-# Build the following row for each symbol in the buy_sell_results:
-#   symbol  num_trades  pct_black  num_black num_red avg_return
-#   avg_gain max_gain max_gain_date avg_loss max_loss max_loss_date
-#
-#  The dates are the buy dates
+# Build the stats row for each symbol in the buy_sell_results
 
 def analyze(cfg):
 
@@ -54,15 +50,41 @@ def analyze(cfg):
 
         avg_return = sym_df["gain_total"].mean()
         avg_gain = blk_trades_df["gain_total"].mean()
-        max_gain = blk_trades_df["gain_total"].max()
-        max_gain_date = blk_trades_df.loc[blk_trades_df['gain_total'].idxmax(), 'buy_date']
-        
         avg_loss = red_trades_df["gain_total"].mean()
-        max_loss = red_trades_df["gain_total"].min()
-        max_loss_date = blk_trades_df.loc[blk_trades_df['gain_total'].idxmin(), 'buy_date']
 
-        row = [symbol, num_trades, pct_black, num_black, num_red, avg_return,
-               avg_gain, max_gain, max_gain_date, avg_loss, max_loss, max_loss_date]
+        max_gain = blk_trades_df["gain_total"].max()
+        mg_idx = blk_trades_df['gain_total'].idxmax()
+        mg_buy_date = blk_trades_df.loc[mg_idx, 'buy_date']
+        mg_buy_price = blk_trades_df.loc[mg_idx, 'buy_price']
+        mg_sell_date = blk_trades_df.loc[mg_idx, 'sell_date']
+        mg_sell_price = blk_trades_df.loc[mg_idx, 'sell_price']
+        
+        
+        max_loss = red_trades_df["gain_total"].min()
+        ml_idx = red_trades_df['gain_total'].idxmin()
+        ml_buy_date = red_trades_df.loc[ml_idx, 'buy_date']
+        ml_buy_price = red_trades_df.loc[ml_idx, 'buy_price']
+        ml_sell_date = red_trades_df.loc[ml_idx, 'sell_date']
+        ml_sell_price = red_trades_df.loc[ml_idx, 'sell_price']
+
+        row = [ symbol, 
+                num_trades, 
+                pct_black, 
+                num_black, 
+                num_red, 
+                avg_return,
+                avg_gain, 
+                avg_loss, 
+                max_gain, 
+                mg_buy_date, 
+                mg_buy_price,
+                mg_sell_date, 
+                mg_sell_price, 
+                max_loss, 
+                ml_buy_date,
+                ml_buy_price, 
+                ml_sell_date, 
+                ml_sell_price]
 
         results_lst.append(row)
 
@@ -85,9 +107,25 @@ def analyze(cfg):
 def append_analysis_csv(csv_file, results_lst, write_header):
 
     # columns for output dataframe
-    cols = ['symbol', 'num_trades', 'pct_black', 'num_black', 'num_red',
-            'avg_return', 'avg_gain', 'max_gain', 'max_gain_date',
-            'avg_loss', 'max_loss', 'max_loss_date']
+    cols = ['symbol', 
+            'num_trades', 
+            'pct_black', 
+            'num_black', 
+            'num_red',
+            'avg_return', 
+            'avg_gain', 
+            'avg_loss',
+            'max_gain', 
+            'mg_buy_date', 
+            'mg_buy_price',
+            'mg_sell_date', 
+            'mg_sell_price',
+            'max_loss',
+            'ml_buy_date',
+            'ml_buy_price',
+            'ml_sell_date',
+            'ml_sell_price']
+
 
     out_df = pd.DataFrame(results_lst, columns=cols).sort_values('pct_black',
                           ascending=False)
