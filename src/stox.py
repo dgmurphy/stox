@@ -14,6 +14,7 @@ from lib.build_intervals import *
 from lib.buy_sell_v3 import *
 from lib.sort_symbols_by_eps import *
 from lib.load_config import *
+from lib.analyze import *
 
 
 def set_budget(current):
@@ -27,6 +28,14 @@ def set_budget(current):
 
 def set_fee(current):
     prompt = "\nFee [" + current + "] > "
+    reply = str(input(prompt).strip())
+    if len(reply) < 1: 
+        return current
+    else:
+        return reply
+
+def set_low_price_cutoff(current):
+    prompt = "\nLow price cutoff [" + current + "] > "
     reply = str(input(prompt).strip())
     if len(reply) < 1: 
         return current
@@ -79,7 +88,6 @@ def get_symbol_file_rows(cfg):
     else:
         return 0
 
-
 def update_symbol_count(cfg):
     sym_list = filter_symbols(cfg)
     cfg['num_symbols_in_window'] = str(len(sym_list))
@@ -117,6 +125,12 @@ def rm_stoxdir(cfg):
     input("OK >")
 
 
+def run_analysis(cfg):
+    logging.info("Running analysis...")
+    analyze(cfg)
+    input("OK >")
+
+
 def main():
 
     config = load_config()
@@ -138,6 +152,7 @@ def main():
             logging.shutdown()
             if os.path.exists("log-stox.log"):
                 os.remove("log-stox.log")
+            logging.info("Log deleted.")
 
         elif reply == '1':
             rm_stoxdir(cfg)
@@ -173,7 +188,14 @@ def main():
             cfg['tx_fee'] = set_fee(cfg['tx_fee'])
 
         elif reply == "10":
+            cfg['low_price_cutoff'] = set_low_price_cutoff(
+                cfg['low_price_cutoff'])
+
+        elif reply == "11":
             run_buy_sell(cfg)
+
+        elif reply == "12":
+            run_analysis(cfg)
  
     # save before exit
     save_config(config)
@@ -195,7 +217,7 @@ def show_menu(cfg, previous):
     
     prompt += "\n Current window start date: " + cfg['date_start']
     prompt += "\n Current window end date: " + cfg['date_end']
-    prompt += ("\n Available stock symbols in current date window: " + 
+    prompt += ("\n Available symbols spanning date window: " + 
                cfg['num_symbols_in_window'] + "\n")
     prompt += ("\n # symbols in current symbol file: " + 
                 str(num_symbols) + "\n")
@@ -211,7 +233,9 @@ def show_menu(cfg, previous):
     prompt += "\n7) Set hold interval (days): " + cfg['stock_hold_time']   
     prompt += "\n8) Change purchasing budget: " + cfg['budget_dollars']
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
-    prompt += "\n10) Run buy-sell process"
+    prompt += "\n10) Change low-price cutoff: " + cfg['low_price_cutoff']
+    prompt += "\n11) Run buy-sell process"
+    prompt += "\n12) Analyze buy-sell results"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "

@@ -21,6 +21,7 @@ def buy_sell_v3(cfg):
     budget_dollars = float(cfg['budget_dollars'])
     fee_dollars = float(cfg['tx_fee'])
     hold_days = int(cfg['stock_hold_time'])
+    low_price_cutoff = float(cfg['low_price_cutoff'])
 
     # clean up the existing output file (ignore !exists error)
     try:
@@ -39,11 +40,6 @@ def buy_sell_v3(cfg):
     except Exception as e:
         logging.warning("Not parsed: " + prices_input_file + "\n" + str(e))
         sys.exit()
-
-    # columns for output dataframe
-    cols = ['symbol', 'interval', 'trading_days_held', 'cal_days_held',
-            'buy_date', 'shares_bought', 'buy_price', 'sell_date', 
-            'shares_sold', 'sell_price', 'fee', 'gain_total']
     
     
     numsyms = len(stox_df)  # total number of symbols
@@ -55,12 +51,10 @@ def buy_sell_v3(cfg):
 
     # Loop over each symbol
     symnum = 1  # symbol idx
+    
     for symbol, sym_df in stox_df:
 
-        logging.info("Processing symbol: " + symbol + 
-                     "  \t\t[" + str(symnum) + " of " + str(numsyms) +"] " +
-                     " \t\t# trading days: " + str(len(sym_df)))
-
+        max_gain = max_loss = 0.0
         pending_lst = []   # has buy attributes for each buy date
 
         row_idx = 0
@@ -83,6 +77,12 @@ def buy_sell_v3(cfg):
 
                 result_row = sell_row(row, pending_lst, fee_dollars)
 
+                returns = float(result_row[11])
+
+                # just for logging
+                if returns > max_gain: max_gain = returns
+                if returns < max_loss: max_loss = returns
+
                 # add the result row to results list
                 results_lst.append(result_row)
                 
@@ -95,16 +95,20 @@ def buy_sell_v3(cfg):
         qmax = 100000
         if len(results_lst) >= qmax:
             logging.info(f"Writing {qmax} results to {buy_sell_output_file}")
-            append_csv(buy_sell_output_file, results_lst, cols, write_header)
+            append_csv(buy_sell_output_file, results_lst, write_header, low_price_cutoff)
             write_header = False
             results_lst = []
 
         symnum += 1    # keep track of how many symbols have been processed
+        logging.info(f"{symbol} \t\t[{symnum} of {numsyms}] \ttrade days: " +
+                     f"{str(len(sym_df))} max_gain: {max_gain:.2f} " +
+                     f"max_loss: {max_loss:.2f}")
+ 
 
     # final csv update
     if len(results_lst) > 0:
         logging.info(f"Writing {len(results_lst)} results to {buy_sell_output_file}")
-        append_csv(buy_sell_output_file, results_lst, cols, write_header)
+        append_csv(buy_sell_output_file, results_lst, write_header, low_price_cutoff)
     
     logging.info("Zero shares bought (price exceeds budget): " + 
                  str(cant_afford))
@@ -113,7 +117,12 @@ def buy_sell_v3(cfg):
 
 
 # Drop unwanted rows and update csv
-def append_csv(csv_file, results_lst, cols, write_header):
+def append_csv(csv_file, results_lst, write_header, low_price_cutoff):
+
+    # columns for output dataframe
+    cols = ['symbol', 'interval', 'trading_days_held', 'cal_days_held',
+            'buy_date', 'shares_bought', 'buy_price', 'sell_date', 
+            'shares_sold', 'sell_price', 'fee', 'gain_total']
 
     out_df = pd.DataFrame(results_lst, columns=cols).sort_values(['symbol', 
                           'interval'], ascending=True)
@@ -121,7 +130,8 @@ def append_csv(csv_file, results_lst, cols, write_header):
     # Drop zero-shares transactions
     out_df = out_df[out_df.shares_bought > 0]
 
-    # TODO drop penny stock transactions (maybe)
+    # drop penny stock transactions
+    out_df = out_df[out_df.buy_price > low_price_cutoff]
 
     with open(csv_file, 'a') as f:
         out_df.to_csv(f, index=False, sep=",", float_format='%.3f', 
