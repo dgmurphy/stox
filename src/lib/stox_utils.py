@@ -46,7 +46,7 @@ def clean_outliers(df):
     df = df[(df.close <= df['mean'] + 3 * df['std']) &
                         (df.close >= df['mean'] - 3 * df['std'])]
 
-   #df = df.dropna()
+    #df = df.dropna()
     #df.to_csv("clean_outliers.csv")
     df = df.drop(['mean', 'std'], axis=1)
 

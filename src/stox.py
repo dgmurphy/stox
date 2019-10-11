@@ -16,6 +16,7 @@ from lib.stox_utils import load_config, save_config
 from lib.analyze import *
 from lib.plot_price import *
 from lib.clean_prices import *
+from lib.test_cleaner import *
 
 
 def set_budget(current):
@@ -148,6 +149,10 @@ def run_clean_prices(cfg):
     logging.info("Running prices cleaner...")
     clean_prices(cfg)
 
+def run_cleaner_test(cfg):
+    logging.info("Running cleaner test...")
+    test_cleaner(cfg)
+
 
 def main():
 
@@ -225,6 +230,12 @@ def main():
         elif reply == "15":
             run_clean_prices(cfg)
 
+        elif reply == "16":
+            cfg['cleaner_test_params'] = set_plot_params(
+                cfg['cleaner_test_params'])
+
+        elif reply == "17":
+            run_cleaner_test(cfg)
 
     # save before exit
     save_config(config)
@@ -268,6 +279,8 @@ def show_menu(cfg, previous):
     prompt += "\n13) Change plot params: " + cfg['plot_params']
     prompt += "\n14) Plot prices"
     prompt += "\n15) Clean raw prices file"
+    prompt += "\n16) Change cleaner test params: " + cfg['cleaner_test_params']
+    prompt += "\n17) Run cleaner test"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "

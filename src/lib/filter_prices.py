@@ -58,11 +58,7 @@ def filter_prices(cfg):
     prices_df = prices_df[(prices_df['date'] >= prices_start_date) &
                    (prices_df['date'] <= prices_end_date)].sort_values(
                    ['symbol', 'date'])
-    
-    # Clean outliers 
-    # Moved to pre-processing raw prices
-    # prices_df = clean_outliers(prices_df)
-    
+
                    
     logging.info("Filtered dates df shape " + str(prices_df.shape))
 
