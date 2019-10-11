@@ -5,7 +5,6 @@ import sys
 from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
-from lib.load_config import load_config
 
 # This builds a result row for every trading day in the set.
 # Transactions that are pending sale until the hold period is reached
@@ -16,7 +15,7 @@ from lib.load_config import load_config
 
 def buy_sell_v3(cfg):
 
-    prices_input_file = (cfg['stox_data_dir'] + cfg['daily_prices_file'])
+    prices_input_file = (cfg['stox_data_dir'] + cfg['filtered_prices_file'])
     buy_sell_output_file = cfg['stox_data_dir'] + cfg['buy_sell_results']
     budget_dollars = float(cfg['budget_dollars'])
     fee_dollars = float(cfg['tx_fee'])
@@ -194,10 +193,3 @@ def buy(row, budget_dollars):
     
     return buy_price, shares_bought, status
     
-
-
-if __name__ == '__main__':
-
-    cfg = load_config()
-    buy_sell_v3(cfg)
-    print("DONE\n")

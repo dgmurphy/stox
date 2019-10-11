@@ -4,6 +4,7 @@ import os.path
 import sys
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
+from lib.stox_utils import clean_outliers
 
 
 def load_df(df_file):
@@ -32,12 +33,12 @@ def filter_prices(cfg):
     end_mo = int(end_list[1])
     end_d = int(end_list[2])
 
-    PRICES_START_DATE = pd.Timestamp(start_yr, start_mo, start_d)
-    PRICES_END_DATE = pd.Timestamp(end_yr, end_mo, end_d)
+    prices_start_date = pd.Timestamp(start_yr, start_mo, start_d)
+    prices_end_date = pd.Timestamp(end_yr, end_mo, end_d)
 
     symbols_input_file = cfg['stox_data_dir'] + cfg['symbols_file']
-    prices_input_file = cfg['raw_data_dir'] + cfg['prices_input_file']
-    filtered_prices_output_file = cfg['stox_data_dir'] + cfg['daily_prices_file']
+    prices_input_file = cfg['stox_data_dir'] + cfg['cleaned_prices_file']
+    filtered_prices_output_file = cfg['stox_data_dir'] + cfg['filtered_prices_file']
  
     # load symbols
     symbols_df = load_df(symbols_input_file)
@@ -47,19 +48,26 @@ def filter_prices(cfg):
     prices_df = load_df(prices_input_file)
     logging.info("Filtering prices with symbols. ")
 
+    # filter on symbols
     prices_df = prices_df[prices_df['symbol'].isin(symbols)]
-    prices_df = prices_df.drop(['high', 'low'], axis=1)
     logging.info("Filtered symbols df shape " + str(prices_df.shape))
 
+    # filter on date range
     logging.info("Filtering by date range.")
     prices_df['date'] = pd.to_datetime(prices_df['date'])
-    prices_df = prices_df[(prices_df['date']>=PRICES_START_DATE) &
-                   (prices_df['date']<=PRICES_END_DATE)].sort_values(
+    prices_df = prices_df[(prices_df['date'] >= prices_start_date) &
+                   (prices_df['date'] <= prices_end_date)].sort_values(
                    ['symbol', 'date'])
+    
+    # Clean outliers 
+    # Moved to pre-processing raw prices
+    # prices_df = clean_outliers(prices_df)
+    
                    
     logging.info("Filtered dates df shape " + str(prices_df.shape))
 
     # write filtered prices
     logging.info("Writing filtered prices to " + filtered_prices_output_file)
     prices_df.to_csv(filtered_prices_output_file, index=False)
+    
 

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 from lib.ntlogging import logging
+from lib.stox_utils import clean_outliers
 
 
 def plot_price(cfg):
@@ -20,8 +21,9 @@ def plot_price(cfg):
         logging.info(f"  to {param_list[2]}")
 
     register_matplotlib_converters()
-
-    prices_input_file = cfg['raw_data_dir'] + cfg['prices_input_file']
+    
+    prices_input_file = cfg['stox_data_dir'] + cfg['cleaned_prices_file']
+    #prices_input_file = cfg['raw_data_dir'] + cfg['raw_prices_input_file']
     try:
         logging.info("Reading " + prices_input_file)
         prices_df = pd.read_table(prices_input_file, sep=',')
@@ -58,6 +60,10 @@ def plot_price(cfg):
     # get group for this symbol
     logging.info("Filtering on symbol")
     df = df.groupby('symbol').get_group(symbol)
+
+    # remove outliers and dropna
+    # moved to pre-processing of raw prices
+    # df = clean_outliers(df)
  
     # write df to file
     span_str = (date_start.strftime("%Y-%m-%d") + "_" +
@@ -68,8 +74,8 @@ def plot_price(cfg):
     # plot open/close price
     fig = plt.figure()
     plt.suptitle(symbol, fontsize=10)
-    plt.scatter(df['date'], df['open'], color='green', s=2)
-    plt.scatter(df['date'], df['close'], color = 'blue', s=2)
+    plt.scatter(df['date'].tolist(), df['open'], color='green', s=2)
+    plt.scatter(df['date'].tolist(), df['close'], color = 'blue', s=2)
 
     plt_filename = cfg['stox_data_dir'] + symbol + "_" + span_str + ".png"
     plt.savefig(plt_filename)

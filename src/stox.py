@@ -10,12 +10,12 @@ import pathlib
 from pathlib import Path
 from lib.filter_symbols import *
 from lib.filter_prices import *
-from lib.build_intervals import *
 from lib.buy_sell_v3 import *
 from lib.sort_symbols_by_eps import *
-from lib.load_config import *
+from lib.stox_utils import load_config, save_config
 from lib.analyze import *
 from lib.plot_price import *
+from lib.clean_prices import *
 
 
 def set_budget(current):
@@ -144,6 +144,10 @@ def run_price_plot(cfg):
     logging.info("Running price plot...")
     plot_price(cfg)
 
+def run_clean_prices(cfg):
+    logging.info("Running prices cleaner...")
+    clean_prices(cfg)
+
 
 def main():
 
@@ -218,6 +222,9 @@ def main():
         elif reply == "14":
             run_price_plot(cfg)
 
+        elif reply == "15":
+            run_clean_prices(cfg)
+
 
     # save before exit
     save_config(config)
@@ -251,7 +258,7 @@ def show_menu(cfg, previous):
     prompt += "\n3) Change window end date: " + cfg['date_end']
     prompt += "\n4) Change symbols limit (n highest EPS): " + cfg['symbols_limit']
     prompt += "\n5) Update symbols file"
-    prompt += "\n6) Filter daily prices list"
+    prompt += "\n6) Filter prices list"
     prompt += "\n7) Set hold interval (days): " + cfg['stock_hold_time']   
     prompt += "\n8) Change purchasing budget: " + cfg['budget_dollars']
     prompt += "\n9) Change transaction fee: " + cfg['tx_fee']
@@ -260,6 +267,7 @@ def show_menu(cfg, previous):
     prompt += "\n12) Analyze buy-sell results"
     prompt += "\n13) Change plot params: " + cfg['plot_params']
     prompt += "\n14) Plot prices"
+    prompt += "\n15) Clean raw prices file"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "

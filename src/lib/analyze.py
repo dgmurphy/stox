@@ -5,7 +5,7 @@ import sys
 from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
-from lib.load_config import load_config
+
 
 # Build the stats row for each symbol in the buy_sell_results
 
@@ -40,6 +40,11 @@ def analyze(cfg):
     numsyms = len(bsr_df)
     
     for symbol, sym_df in bsr_df:
+
+        # TODO: try to fix the problems caused by noise in the
+        #       price data. E.g. massive single-day price
+        #       fluctuations
+        #
 
         num_trades = len(sym_df)
         blk_trades_df = sym_df[sym_df['gain_total'] > 0.0]
