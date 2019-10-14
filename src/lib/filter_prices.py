@@ -4,7 +4,7 @@ import os.path
 import sys
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
-from lib.stox_utils import clean_outliers
+from lib.stox_utils import *
 
 
 def load_df(df_file):
@@ -36,9 +36,9 @@ def filter_prices(cfg):
     prices_start_date = pd.Timestamp(start_yr, start_mo, start_d)
     prices_end_date = pd.Timestamp(end_yr, end_mo, end_d)
 
-    symbols_input_file = cfg['stox_data_dir'] + cfg['symbols_file']
-    prices_input_file = cfg['stox_data_dir'] + cfg['cleaned_prices_file']
-    filtered_prices_output_file = cfg['stox_data_dir'] + cfg['filtered_prices_file']
+    symbols_input_file = SYMBOLS_FILE
+    prices_input_file = CLEANED_PRICES_FILE
+    filtered_prices_output_file = FILTERED_PRICES_FILE
  
     # load symbols
     symbols_df = load_df(symbols_input_file)

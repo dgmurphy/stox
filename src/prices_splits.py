@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 from lib.ntlogging import logging
+from lib.stox_utils import *
 
 def load_prices(prices_file):
 
@@ -46,7 +47,7 @@ def main():
     proc_starttime = datetime.now()
     logging.info("Processing started: " + str(proc_starttime))
 
-    prices_input_file = "../data/raw/stock_prices_latest.csv"
+    prices_input_file = RAW_PRICES_INPUT_FILE
 
     register_matplotlib_converters()
         

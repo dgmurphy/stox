@@ -4,11 +4,13 @@ import os.path
 import sys
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
+from lib.stox_utils import *
+
 
 def filter_symbols(cfg):
 
-    summary_input_file = cfg['raw_data_dir'] + cfg['summary_input_file']
-    symbols_output_file = cfg['stox_data_dir'] + cfg['symbols_file']
+    summary_input_file = SUMMARY_INPUT_FILE
+    symbols_output_file = SYMBOLS_FILE
 
     start_list = cfg['date_start'].split('-')
     start_yr = int(start_list[0])

@@ -4,8 +4,7 @@ import os.path
 import sys
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
-from lib.stox_utils import clean_outliers
-
+from lib.stox_utils import *
 
 def load_df(df_file):
 
@@ -21,23 +20,35 @@ def load_df(df_file):
     return df
      
 
+
 def clean_prices(cfg):
 
-    prices_input_file = cfg['raw_data_dir'] + cfg['raw_prices_input_file']
-    prices_output_file = cfg['stox_data_dir'] + cfg['cleaned_prices_file']
+    prices_input_file = RAW_PRICES_INPUT_FILE
+    prices_output_file = CLEANED_PRICES_FILE
  
+    # clean up the existing output file (ignore !exists error)
+    try:
+        os.remove(prices_output_file)
+    except OSError:
+        pass   
+
     # load prices
-    prices_df = load_df(prices_input_file)
+    prices_df = load_df(prices_input_file).groupby('symbol')
+
+    write_header = True
 
     # Clean outliers 
-    # TODO sort by symbol or date
-    prices_df = clean_outliers(prices_df)
-    
-                   
-    logging.info("Cleaned prices shape " + str(prices_df.shape))
+    for symbol, sym_df in prices_df:
 
-    # write filtered prices
-    logging.info("Writing cleaned prices to " + prices_output_file)
-    prices_df.to_csv(prices_output_file, index=False)
+        sym_df = prices_df.get_group(symbol)
+        logging.info(f"Cleaning outliers for {symbol}")
+        sym_df = clean_outliers(sym_df, cfg['rolling_sample_window'])
+        
+        with open(prices_output_file, 'a') as f:
+            sym_df.to_csv(f, index=False, sep=",", header=write_header)
+            write_header = False
+
+                   
+
     
     

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import configparser
 from lib.ntlogging import logging
 from lib.filter_symbols import *
+from lib.stox_utils import *
 
 
 def load_earnings(fname):
@@ -37,8 +38,8 @@ def sort_symbols_by_eps(cfg):
     PRICES_START_DATE = pd.Timestamp(start_yr, start_mo, start_d)
     PRICES_END_DATE = pd.Timestamp(end_yr, end_mo, end_d)
 
-    earnings_input_file = cfg['raw_data_dir'] + cfg['earnings_input_file']
-    sorted_symbols_output_file = cfg['stox_data_dir'] + cfg['symbols_file']
+    earnings_input_file = EARNINGS_INPUT_FILE
+    sorted_symbols_output_file = SYMBOLS_FILE
         
     # load earnings
     earn_df = load_earnings(earnings_input_file)

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 from lib.ntlogging import logging
-from lib.stox_utils import clean_outliers
+from lib.stox_utils import *
 
 
 def plot_price(cfg):
@@ -22,7 +22,7 @@ def plot_price(cfg):
 
     register_matplotlib_converters()
     
-    prices_input_file = cfg['stox_data_dir'] + cfg['cleaned_prices_file']
+    prices_input_file = CLEANED_PRICES_FILE
     #prices_input_file = cfg['raw_data_dir'] + cfg['raw_prices_input_file']
     try:
         logging.info("Reading " + prices_input_file)

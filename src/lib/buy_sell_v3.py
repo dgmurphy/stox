@@ -5,6 +5,7 @@ import sys
 from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
+from lib.stox_utils import FILTERED_PRICES_FILE, BUY_SELL_RESULTS_FILE
 
 # This builds a result row for every trading day in the set.
 # Transactions that are pending sale until the hold period is reached
@@ -15,8 +16,8 @@ from lib.ntlogging import logging
 
 def buy_sell_v3(cfg):
 
-    prices_input_file = (cfg['stox_data_dir'] + cfg['filtered_prices_file'])
-    buy_sell_output_file = cfg['stox_data_dir'] + cfg['buy_sell_results']
+    prices_input_file = FILTERED_PRICES_FILE
+    buy_sell_output_file = BUY_SELL_RESULTS_FILE
     budget_dollars = float(cfg['budget_dollars'])
     fee_dollars = float(cfg['tx_fee'])
     hold_days = int(cfg['stock_hold_time'])
@@ -24,7 +25,7 @@ def buy_sell_v3(cfg):
 
     # clean up the existing output file (ignore !exists error)
     try:
-        os.remove(buy_sell_output_file)
+        os.remove(BUY_SELL_RESULTS_FILE)
     except OSError:
         pass   
 
@@ -93,8 +94,8 @@ def buy_sell_v3(cfg):
         # peridocially write the results list
         qmax = 100000
         if len(results_lst) >= qmax:
-            logging.info(f"Writing {qmax} results to {buy_sell_output_file}")
-            append_csv(buy_sell_output_file, results_lst, write_header, low_price_cutoff)
+            logging.info(f"Writing {qmax} results to {BUY_SELL_RESULTS_FILE}")
+            append_csv(BUY_SELL_RESULTS_FILE, results_lst, write_header, low_price_cutoff)
             write_header = False
             results_lst = []
 
@@ -106,8 +107,8 @@ def buy_sell_v3(cfg):
 
     # final csv update
     if len(results_lst) > 0:
-        logging.info(f"Writing {len(results_lst)} results to {buy_sell_output_file}")
-        append_csv(buy_sell_output_file, results_lst, write_header, low_price_cutoff)
+        logging.info(f"Writing {len(results_lst)} results to {BUY_SELL_RESULTS_FILE}")
+        append_csv(BUY_SELL_RESULTS_FILE, results_lst, write_header, low_price_cutoff)
     
     logging.info("Zero shares bought (price exceeds budget): " + 
                  str(cant_afford))

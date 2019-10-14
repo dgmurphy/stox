@@ -5,32 +5,35 @@ import sys
 from math import floor
 from datetime import datetime, timedelta
 from lib.ntlogging import logging
+from lib.stox_utils import *
 
 
 # Build the stats row for each symbol in the buy_sell_results
 
 def analyze(cfg):
 
-    buy_sell_results_file =  cfg['stox_data_dir'] + cfg['buy_sell_results']
-    analysis_file = cfg['stox_data_dir'] + cfg['analysis_file']
+    analysis_postfix = (f"{cfg['stock_hold_time']}_days_" +
+                        f"{cfg['budget_dollars']}_dollars.csv")
+    
+    analysis_output_file = ANALYSIS_FILE_PREFIX + analysis_postfix
 
     # clean up the existing output file (ignore !exists error)
     try:
-        os.remove(analysis_file)
+        os.remove(analysis_output_file)
     except OSError:
         pass   
 
     # load buy-sell results and group by symbol
     try:
-        logging.info(f"Reading {buy_sell_results_file}")
-        bsr_df = pd.read_table(buy_sell_results_file, sep=",")
+        logging.info(f"Reading {BUY_SELL_RESULTS_FILE}")
+        bsr_df = pd.read_table(BUY_SELL_RESULTS_FILE, sep=",")
         #bsr_df['buy_date'] = pd.to_datetime(bsr_df['buy_date'])
         #bsr_df['sell_date'] = pd.to_datetime(bsr_df['sell_date'])
         bsr_df = bsr_df.groupby('symbol')
         logging.info("Found " + str(len(bsr_df)) + " symbols in buy-sell data.")
     
     except Exception as e:
-        logging.warning("Not parsed: " + buy_sell_results_file + "\n" + str(e))
+        logging.warning("Not parsed: " + BUY_SELL_RESULTS_FILE + "\n" + str(e))
         sys.exit()
 
     results_lst = []  # output rows
@@ -95,8 +98,8 @@ def analyze(cfg):
 
         # peridocially write the results list
         if len(results_lst) >= qmax:
-            logging.info(f"Writing {qmax} results to {analysis_file}")
-            append_analysis_csv(analysis_file, results_lst, write_header)
+            logging.info(f"Writing {qmax} results to {analysis_output_file}")
+            append_analysis_csv(analysis_output_file, results_lst, write_header)
             write_header = False
             results_lst = []
 
@@ -104,10 +107,11 @@ def analyze(cfg):
         logging.info(f"{symbol} \t\t[{symnum} of {numsyms}] \tpct_black: " +
                      f"{pct_black:.1f} avg_return: {avg_return:.2f} ")       
 
-     # final csv update
+    # final csv update
     if len(results_lst) > 0:
-        logging.info(f"Writing {len(results_lst)} results to {analysis_file}")
-        append_analysis_csv(analysis_file, results_lst, write_header)
+        logging.info(f"Writing {len(results_lst)} results to {analysis_output_file}")
+        append_analysis_csv(analysis_output_file, results_lst, write_header)
+
 
 def append_analysis_csv(csv_file, results_lst, write_header):
 
