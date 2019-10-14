@@ -12,9 +12,11 @@ from lib.stox_utils import *
 
 def analyze(cfg):
 
-    analysis_postfix = (f"{cfg['stock_hold_time']}_days_" +
-                        f"{cfg['budget_dollars']}_dollars.csv")
-    
+    hold_str = str(int(float(cfg['stock_hold_time'])))
+    budget_dollars_str = str(int(float(cfg['budget_dollars'])))
+
+    analysis_postfix = hold_str + "_days_" + budget_dollars_str + "_dollars.csv"
+
     analysis_output_file = ANALYSIS_FILE_PREFIX + analysis_postfix
 
     # clean up the existing output file (ignore !exists error)
@@ -44,68 +46,72 @@ def analyze(cfg):
     
     for symbol, sym_df in bsr_df:
 
-        # TODO: try to fix the problems caused by noise in the
-        #       price data. E.g. massive single-day price
-        #       fluctuations
-        #
+        try:
 
-        num_trades = len(sym_df)
-        blk_trades_df = sym_df[sym_df['gain_total'] > 0.0]
-        red_trades_df = sym_df[sym_df['gain_total'] < 0.0]
-        num_black = len(blk_trades_df)
-        pct_black = float(num_black) / float(num_trades)
-        num_red = len(red_trades_df)
+            num_trades = len(sym_df)
+            blk_trades_df = sym_df[sym_df['gain_total'] > 0.0]
+            red_trades_df = sym_df[sym_df['gain_total'] < 0.0]
+            num_black = len(blk_trades_df)
+            pct_black = float(num_black) / float(num_trades)
+            num_red = len(red_trades_df)
 
-        avg_return = sym_df["gain_total"].mean()
-        avg_gain = blk_trades_df["gain_total"].mean()
-        avg_loss = red_trades_df["gain_total"].mean()
+            avg_return = sym_df["gain_total"].mean()
+            avg_gain = blk_trades_df["gain_total"].mean()
+            avg_loss = red_trades_df["gain_total"].mean()
 
-        max_gain = blk_trades_df["gain_total"].max()
-        mg_idx = blk_trades_df['gain_total'].idxmax()
-        mg_buy_date = blk_trades_df.loc[mg_idx, 'buy_date']
-        mg_buy_price = blk_trades_df.loc[mg_idx, 'buy_price']
-        mg_sell_date = blk_trades_df.loc[mg_idx, 'sell_date']
-        mg_sell_price = blk_trades_df.loc[mg_idx, 'sell_price']
-        
-        
-        max_loss = red_trades_df["gain_total"].min()
-        ml_idx = red_trades_df['gain_total'].idxmin()
-        ml_buy_date = red_trades_df.loc[ml_idx, 'buy_date']
-        ml_buy_price = red_trades_df.loc[ml_idx, 'buy_price']
-        ml_sell_date = red_trades_df.loc[ml_idx, 'sell_date']
-        ml_sell_price = red_trades_df.loc[ml_idx, 'sell_price']
+            max_gain = blk_trades_df["gain_total"].max()
+            mg_idx = blk_trades_df['gain_total'].idxmax()
+            mg_buy_date = blk_trades_df.loc[mg_idx, 'buy_date']
+            mg_buy_price = blk_trades_df.loc[mg_idx, 'buy_price']
+            mg_sell_date = blk_trades_df.loc[mg_idx, 'sell_date']
+            mg_sell_price = blk_trades_df.loc[mg_idx, 'sell_price']
+            
+            
+            max_loss = red_trades_df["gain_total"].min()
+            ml_idx = red_trades_df['gain_total'].idxmin()
+            ml_buy_date = red_trades_df.loc[ml_idx, 'buy_date']
+            ml_buy_price = red_trades_df.loc[ml_idx, 'buy_price']
+            ml_sell_date = red_trades_df.loc[ml_idx, 'sell_date']
+            ml_sell_price = red_trades_df.loc[ml_idx, 'sell_price']
 
-        row = [ symbol, 
-                num_trades, 
-                pct_black, 
-                num_black, 
-                num_red, 
-                avg_return,
-                avg_gain, 
-                avg_loss, 
-                max_gain, 
-                mg_buy_date, 
-                mg_buy_price,
-                mg_sell_date, 
-                mg_sell_price, 
-                max_loss, 
-                ml_buy_date,
-                ml_buy_price, 
-                ml_sell_date, 
-                ml_sell_price]
+            row = [ symbol, 
+                    num_trades, 
+                    pct_black, 
+                    num_black, 
+                    num_red, 
+                    avg_return,
+                    avg_gain, 
+                    avg_loss, 
+                    max_gain, 
+                    mg_buy_date, 
+                    mg_buy_price,
+                    mg_sell_date, 
+                    mg_sell_price, 
+                    max_loss, 
+                    ml_buy_date,
+                    ml_buy_price, 
+                    ml_sell_date, 
+                    ml_sell_price]
 
-        results_lst.append(row)
+            # drop low numbers of trades
+            if num_trades >= int(cfg['analyze_min_trades']):
+                results_lst.append(row)
+            else:
+                logging.info(f"dropped symbol {symbol} for low trade occurrences.")
 
-        # peridocially write the results list
-        if len(results_lst) >= qmax:
-            logging.info(f"Writing {qmax} results to {analysis_output_file}")
-            append_analysis_csv(analysis_output_file, results_lst, write_header)
-            write_header = False
-            results_lst = []
+            # peridocially write the results list
+            if len(results_lst) >= qmax:
+                logging.info(f"Writing {qmax} results to {analysis_output_file}")
+                append_analysis_csv(analysis_output_file, results_lst, write_header)
+                write_header = False
+                results_lst = []
 
-        symnum += 1    # keep track of how many symbols have been processed
-        logging.info(f"{symbol} \t\t[{symnum} of {numsyms}] \tpct_black: " +
-                     f"{pct_black:.1f} avg_return: {avg_return:.2f} ")       
+            symnum += 1    # keep track of how many symbols have been processed
+            logging.info(f"{symbol} \t\t[{symnum} of {numsyms}] \tpct_black: " +
+                        f"{pct_black:.1f} avg_return: {avg_return:.2f} ")    
+
+        except Exception as e:
+            logging.error("Exception in analyze " + str(e))
 
     # final csv update
     if len(results_lst) > 0:

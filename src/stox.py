@@ -29,10 +29,6 @@ def get_symbol_file_rows(cfg):
     else:
         return 0
 
-# def update_symbol_count(cfg):
-#     sym_list = filter_symbols(cfg)
-#     cfg['num_symbols_in_window'] = str(len(sym_list))
-
 
 def write_symbols(cfg):
     logging.info("Running symbols filter...")
@@ -64,6 +60,31 @@ def run_analysis(cfg):
     logging.info("Running analysis...")
     analyze(cfg)
     input("OK >")
+
+
+def run_buy_sell_analyze(cfg):
+
+    holds_cfg = cfg['hold_times_list'].strip()
+    budget_cfg = cfg['budget_list'].strip()
+
+    holds_lst = holds_cfg.split(",")
+    budget_lst = budget_cfg.split(",")
+
+    for budget in budget_lst:
+        b = float(budget.strip())
+
+        for hold in holds_lst:
+            h = int(hold.strip())
+
+            cfg['stock_hold_time'] = str(h)
+            cfg['budget_dollars'] = str(b)
+
+            logging.info(f"Running buy-sell with {h} days and {b} dollars...")
+            buy_sell_v3(cfg)
+            logging.info("Running analyze with {h} days and {b} dollars...")
+            analyze(cfg)
+
+    input("OK > ")
 
 
 def run_price_plot(cfg):
@@ -105,26 +126,29 @@ def main():
         elif reply == '1':
             rm_stoxdir(cfg)
 
-        elif reply == "5":
-            write_symbols(cfg)
-
-        elif reply == "6":
-            run_prices_filter(cfg)
-
-        elif reply == "11":
-            run_buy_sell(cfg)
-
-        elif reply == "12":
-            run_analysis(cfg)
-
-        elif reply == "14":
-            run_price_plot(cfg)
-
-        elif reply == "15":
+        elif reply == "2":
             run_clean_prices(cfg)
 
-        elif reply == "17":
+        elif reply == "3":
+            write_symbols(cfg)
+
+        elif reply == "4":
+            run_prices_filter(cfg)
+
+        elif reply == "5":
+            run_buy_sell(cfg)
+
+        elif reply == "6":
+            run_analysis(cfg)
+
+        elif reply == "7":
+            run_price_plot(cfg)
+
+        elif reply == "8":
             run_cleaner_test(cfg)
+
+        elif reply == "9":
+            run_buy_sell_analyze(cfg)
 
 
 # Kaggle:
@@ -154,14 +178,14 @@ def show_menu(previous):
     prompt += "\nCommands:"           
     prompt += "\n0) Delete the log"
     prompt += "\n1) Delete generated data"
-    prompt += "\n5) Update symbols file"
-    prompt += "\n6) Filter prices list"
-    prompt += "\n11) Run buy-sell process"
-    prompt += "\n12) Analyze buy-sell results"
-    prompt += "\n14) Plot prices: " + cfg['plot_params']
-    prompt += "\n15) Process raw prices file (clean outliers)"
-    prompt += "\n16) Change cleaner test params: " 
-    prompt += "\n17) Run cleaner test: " + cfg['cleaner_test_params']
+    prompt += "\n2) Process raw prices file (clean outliers)"
+    prompt += "\n3) Update symbols file (filter by date & limit)"
+    prompt += "\n4) Filter prices list (dates, symbols)"
+    prompt += "\n5) Run buy-sell process"
+    prompt += "\n6) Analyze buy-sell results"
+    prompt += "\n7) Plot prices: " + cfg['plot_params']
+    prompt += "\n8) Run cleaner test: " + cfg['cleaner_test_params']
+    prompt += "\n9) Run buy-sell + analyze matrix"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "
