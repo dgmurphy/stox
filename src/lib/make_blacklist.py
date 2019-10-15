@@ -70,15 +70,21 @@ def make_blacklist(cfg):
 
 
     # build a df with the pct_black results across all holds
-    cols = ['symbol', 'd4', 'd9', 'd14', 'd19', 'd30', 'd60', 'd90']
+    cols = ['symbol', 'd4', 'd9', 'd14', 'd19', 'd30', 'd60', 'd90', 'avg_return']
     rows_list = []
     i = 0
     for symbol in keep_symbols:
+        rtn_sum = 0  # to make average return
         row = [symbol]
         for df in df_list:
+
+            rtn_sum += df.loc[df.symbol == symbol, 'avg_return'].values[0]
+
             pct_blk = df.loc[df.symbol == symbol, 'pct_black'].values[0]
             row.append(pct_blk)
-        
+
+        avg_return = rtn_sum / float(len(file_list))
+        row.append(avg_return)        
         rows_list.append(row)
         i += 1
         if((i % 100) == 0): 
@@ -89,7 +95,7 @@ def make_blacklist(cfg):
     bl_df = pd.DataFrame(rows_list, columns=cols)
     
     # add column for avg pct_blk
-    bl_df['avg_pct_blk'] = bl_df.iloc[:, 1:].mean(axis=1)
+    bl_df['avg_pct_blk'] = bl_df.iloc[:, 1:8].mean(axis=1)
     bl_df = bl_df.sort_values('avg_pct_blk', ascending=False)
 
     logging.info(f"bl_df shape {bl_df.shape}")
