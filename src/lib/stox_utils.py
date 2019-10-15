@@ -13,6 +13,7 @@ FILTERED_PRICES_FILE = STOX_DATA_DIR + "stock_prices_filtered.csv"
 SYMBOLS_FILE = STOX_DATA_DIR + "symbols.csv"
 BUY_SELL_RESULTS_FILE = STOX_DATA_DIR + "buy_sell_results.csv"
 ANALYSIS_FILE_PREFIX = STOX_DATA_DIR + "analysis_"
+BLACKLIST_FILE_PREFIX = STOX_DATA_DIR + "blacklist_"
 
 
     

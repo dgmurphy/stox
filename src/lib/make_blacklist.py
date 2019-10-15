@@ -8,6 +8,19 @@ from lib.ntlogging import logging
 from lib.stox_utils import *
 
 
+# for a symbol, get the pct_black for each of the holds
+#  return a row with the pct_black for each hold plus the avg
+# def get_avg_blk(symbol, df_list):
+
+#     pct_blk = 0
+#     for df in df_list:
+#         # get the value at col 'pct_black' from the symbol row
+#         #  here there should be only one result -> values[0]
+#         pct_blk = df.loc[df.symbol == symbol, 'pct_black'].values[0]
+#         print(f"pct_blk {pct_blk}")
+
+#     sys.exit()
+
 def make_blacklist(cfg):
 
     pct_cutoff = 0.51
@@ -21,15 +34,18 @@ def make_blacklist(cfg):
         'analysis_60_days_1000_dollars.csv',
         'analysis_90_days_1000_dollars.csv'
     ]
+    df_list = []  # keep each df 
 
     logging.info(f"Loading {file_list[0]}")
-    days4_df = pd.read_table(STOX_DATA_DIR + file_list[0], sep=",")
-    logging.info(f"days4_df shape: {days4_df.shape}")
+    df = pd.read_table(STOX_DATA_DIR + file_list[0], sep=",")
+    logging.info(f"file0 df shape: {df.shape}")
 
-    days4_df = days4_df[days4_df.pct_black > pct_cutoff]
-    logging.info(f"days4_df > pct cutoff shape: {days4_df.shape}")
+    df = df[df.pct_black > pct_cutoff]
+    logging.info(f"file0 df > pct cutoff shape: {df.shape}")
 
-    keep_symbols = set(days4_df['symbol'].tolist())
+    df_list.append(df)
+
+    keep_symbols = set(df['symbol'].tolist())
     drop_symbols = set()
 
     for file in file_list[1:]:
@@ -40,6 +56,8 @@ def make_blacklist(cfg):
         for k in keep_symbols:
             if k not in check_symbols:
                 drop_symbols.add(k)
+        
+        df_list.append(df)
 
     print(f"{len(drop_symbols)} symbols getting dropped.")
     #logging.info(str(drop_symbols))
@@ -48,5 +66,34 @@ def make_blacklist(cfg):
         keep_symbols.remove(d)
 
     print(f"{len(keep_symbols)} symbols kept.")
+    print(f"{len(df_list)} dfs made")
 
-    sys.exit()
+
+    # build a df with the pct_black results across all holds
+    cols = ['symbol', 'd4', 'd9', 'd14', 'd19', 'd30', 'd60', 'd90']
+    rows_list = []
+    i = 0
+    for symbol in keep_symbols:
+        row = [symbol]
+        for df in df_list:
+            pct_blk = df.loc[df.symbol == symbol, 'pct_black'].values[0]
+            row.append(pct_blk)
+        
+        rows_list.append(row)
+        i += 1
+        if((i % 100) == 0): 
+            logging.info(f"processing symbol {i} of {len(keep_symbols)}")
+
+    # blacklist df
+    logging.info(f"Building blacklist df with {len(rows_list)} rows")
+    bl_df = pd.DataFrame(rows_list, columns=cols)
+    
+    # add column for avg pct_blk
+    bl_df['avg_pct_blk'] = bl_df.iloc[:, 1:].mean(axis=1)
+    bl_df = bl_df.sort_values('avg_pct_blk', ascending=False)
+
+    logging.info(f"bl_df shape {bl_df.shape}")
+    print(bl_df.head())
+
+    bl_file = BLACKLIST_FILE_PREFIX + "_1000_dollars.csv"
+    bl_df.to_csv("blacklist.csv", index=False, float_format='%.3f')

@@ -107,7 +107,7 @@ def run_cleaner_test(cfg):
 def run_make_blacklist(cfg):
     logging.info("Running blacklist...")
     make_blacklist(cfg)
-
+    input("OK >")
 
 def main():
 
