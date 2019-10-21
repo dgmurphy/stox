@@ -18,6 +18,7 @@ from lib.plot_price import *
 from lib.clean_prices import *
 from lib.test_cleaner import *
 from lib.make_blacklist import *
+from lib.run_benchmarks import *
 
 
 def get_symbol_file_rows(cfg):
@@ -109,6 +110,14 @@ def run_make_blacklist(cfg):
     make_blacklist(cfg)
     input("OK >")
 
+def run_bench(cfg):
+    logging.info("Running benchmarks...")
+    run_benchmarks(cfg)
+    input("OK >")
+
+
+
+
 def main():
 
     # make the output dir if needed
@@ -158,6 +167,9 @@ def main():
         elif reply == "10":
             run_make_blacklist(cfg)
 
+        elif reply == "11":
+            run_bench(cfg)
+
 
 # Kaggle:
 # https://www.kaggle.com/tsaustin/us-historical-stock-prices-with-earnings-data
@@ -195,6 +207,7 @@ def show_menu(previous):
     prompt += "\n8) Run cleaner test: " + cfg['cleaner_test_params']
     prompt += "\n9) Run buy-sell + analyze matrix"
     prompt += "\n10) Make blacklist"
+    prompt += "\n11) Run benchmarks"
     prompt += "\nq) Quit"
     prompt += "\nLast command was: " + str(previous)
     prompt += "\nstox > "
