@@ -101,5 +101,5 @@ def make_blacklist(cfg):
     logging.info(f"bl_df shape {bl_df.shape}")
     print(bl_df.head())
 
-    bl_file = BLACKLIST_FILE_PREFIX + "_1000_dollars.csv"
-    bl_df.to_csv("blacklist.csv", index=False, float_format='%.3f')
+    bl_file = BLACKLIST_FILE_PREFIX + "1000_dollars.csv"
+    bl_df.to_csv(bl_file, index=False, float_format='%.3f')

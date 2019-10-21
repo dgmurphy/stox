@@ -64,7 +64,7 @@ def plot_price(cfg):
     # write df to file
     span_str = (date_start.strftime("%Y-%m-%d") + "_" +
         date_end.strftime("%Y-%m-%d"))
-    csv_name = cfg['stox_data_dir'] + symbol + "_" + span_str + ".csv"
+    csv_name = STOX_DATA_DIR + symbol + "_" + span_str + ".csv"
     df.to_csv(csv_name, index=False, sep="\t", float_format='%.3f')
 
     # plot open/close price
@@ -73,7 +73,7 @@ def plot_price(cfg):
     plt.scatter(df['date'].tolist(), df['open'], color='green', s=2)
     plt.scatter(df['date'].tolist(), df['close'], color = 'blue', s=2)
 
-    plt_filename = cfg['stox_data_dir'] + symbol + "_" + span_str + ".png"
+    plt_filename = STOX_DATA_DIR + symbol + "_" + span_str + ".png"
     plt.savefig(plt_filename)
     plt.show()
 
