@@ -57,6 +57,8 @@ def buy_sell_v3(cfg):
         max_gain = max_loss = 0.0
         pending_lst = []   # has buy attributes for each buy date
 
+        # TODO make sure the sym_df is in date order ascending
+
         row_idx = 0
         for row in sym_df.itertuples():
 
